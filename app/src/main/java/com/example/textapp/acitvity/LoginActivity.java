@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.textapp.R;
+import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
 import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.User_Info;
@@ -26,11 +27,17 @@ public class LoginActivity extends AppCompatActivity {
 
     private NotesDBHelper mDBHelper;
 
+    //private TCPClient mClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_login);
+
+        //打开客户端;
+//        mClient= MyApplication.getInstance().mClient;
+//        new Thread(mClient).start();
 
         //打开数据库链接;
         mDBHelper=NotesDBHelper.getInstance(this);
