@@ -1,6 +1,20 @@
 package com.example.textapp.entity;
 
 public class User_Info {
+
+    public static final String USER_ID="user_id";
+
+    public static final String PASSWORD="password";
+
+    public static final String AGE="age";
+
+    public static final String GENDER="gender";
+
+    public static final String GENDER_MALE="male";
+    public static final String GENDER_FEMALE="female";
+
+    public static final String NAME="name";
+
     public String user_id;
 
     public String password;
@@ -23,7 +37,7 @@ public class User_Info {
     public User_Info(){
         user_id=null;
         password=null;
-        gender="male";
+        gender=GENDER_MALE;
     }
 
     public boolean equals(User_Info info){

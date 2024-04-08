@@ -22,4 +22,9 @@ public class TCPClient {
         thread.start();
         sendHandler=thread.getReciveHandler();
     }
+
+    //发送消息给客户端线程:需要查询服务器中指定UserId中的password;
+    public boolean sendQueryPasswordByUserId(String UserId) {
+        return true;
+    }
 }

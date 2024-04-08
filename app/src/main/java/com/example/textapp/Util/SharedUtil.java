@@ -7,14 +7,16 @@ public class SharedUtil {
     private static SharedUtil mUtil;
     private SharedPreferences mpref;
 
-    public static String RESTOREDPASSWORD="RESTOREDPASSWORD";
-    public static String USERID="USERID";
-    public static String PASSWORD="PASSWORD";
+    public static final String PREFERNAME="user";
+
+    public static final String RESTOREDPASSWORD="RESTOREDPASSWORD";
+    public static final String USERID="USERID";
+    public static final String PASSWORD="PASSWORD";
 
     public static SharedUtil getInstance(Context context){
         if(mUtil==null){
             mUtil=new SharedUtil();
-            mUtil.mpref=context.getSharedPreferences("user",Context.MODE_PRIVATE);
+            mUtil.mpref=context.getSharedPreferences(PREFERNAME,Context.MODE_PRIVATE);
         }
         return mUtil;
     }

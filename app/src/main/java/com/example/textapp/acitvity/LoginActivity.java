@@ -142,7 +142,7 @@ public class LoginActivity extends AppCompatActivity {
                 
                 if(!correct){
                     //服务器端查询;
-                    //TODO;
+                    correct=mClient.sendQueryPasswordByUserId(info.user_id);
                 }
                 
                 
@@ -165,7 +165,7 @@ public class LoginActivity extends AppCompatActivity {
                     mDBHelper.insertLoginInfoByUserId(userId);
                     //Log.v("Note","Next Activity");
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
-                    intent.putExtra("userId",info.user_id);
+                    intent.putExtra(User_Info.USER_ID,info.user_id);
                     startActivity(intent);
                     finish();
                 }
@@ -221,9 +221,9 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 else{
                     int rb_gender=rg_gender.getCheckedRadioButtonId();
-                    String gender="male";
+                    String gender=User_Info.GENDER_MALE;
                     if(rb_gender==R.id.radioButton_gender_female){
-                        gender="female";
+                        gender=User_Info.GENDER_FEMALE;
                     }
                     User_Info info=new User_Info(et_register_userId.getText().toString(),password,
                             Integer.parseInt(et_age.getText().toString()),gender,et_name.getText().toString());
@@ -248,7 +248,7 @@ public class LoginActivity extends AppCompatActivity {
                     //本次登录信息记录到数据库并跳转到NoteActivity;
                     mDBHelper.insertLoginInfoByUserId(info.user_id);
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
-                    intent.putExtra("userId",info.user_id);
+                    intent.putExtra(User_Info.USER_ID,info.user_id);
                     startActivity(intent);
                     finish();
                 }
@@ -276,7 +276,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     protected void onDestroy() {
-        mDBHelper.colseLink();
+        mDBHelper.closeLink();
         super.onDestroy();
     }
 

@@ -60,7 +60,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void colseLink(){
+    public void closeLink(){
         if(mRDB!=null&&mRDB.isOpen()){
             mRDB.close();
             mRDB=null;
@@ -81,11 +81,11 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         //gender (male or female)
         //age INTEGER
         String sql="CREATE TABLE IF NOT EXISTS "+TABLE_USER_INFO+"("+
-                "user_id VARCAHR(11) PRIMARY KEY NOT NULL,"+
-                "name VARCHAR,"+
-                "password VARCHAR NOT NULL,"+
-                "gender VARCHAR check(gender in('male','female')) not null default 'male',"+
-                "age INTEGER);";
+                User_Info.USER_ID+" VARCAHR(11) PRIMARY KEY NOT NULL,"+
+                User_Info.NAME+" VARCHAR,"+
+                User_Info.PASSWORD+" VARCHAR NOT NULL,"+
+                User_Info.GENDER+" VARCHAR check("+User_Info.GENDER+" in('"+User_Info.GENDER_MALE+"','"+User_Info.GENDER_FEMALE+"')) not null default '"+User_Info.GENDER_MALE+"',"+
+                User_Info.AGE+" INTEGER);";
 
         db.execSQL(sql);
 
@@ -95,10 +95,10 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         //time:yyyy-MM-dd HH:mm:ss
         //device:设备名称-设备型号-设备安卓版本;
         sql="CREATE TABLE IF NOT EXISTS "+TABLE_LOGIN_INFO+"("+
-                "info_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"+
-                "user_id VARCHAR(11) NOT NULL,"+
-                "time VARCHAR NOT NULL,"+
-                "device VARCHAR NOT NULL);";
+                Login_Info.INFO_ID+" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"+
+                User_Info.USER_ID+" VARCHAR(11) NOT NULL,"+
+                Login_Info.TIME+" VARCHAR NOT NULL,"+
+                Login_Info.DEVICE+" VARCHAR NOT NULL);";
 
         db.execSQL(sql);
 
@@ -107,9 +107,9 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         //user_id: VARCHAR(11) NOT NULL
         //note_content:VARCHAR
         sql="CREATE TABLE IF NOT EXISTS "+TABLE_NOTES_INFO+"("+
-                "note_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"+
-                "user_id VACHAR(11) NOT NULL,"+
-                "note_content VARCHAR);";
+                Note.NOTE_ID+" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"+
+                User_Info.USER_ID+" VACHAR(11) NOT NULL,"+
+                Note.CONTENT+" VARCHAR);";
 
         db.execSQL(sql);
         Log.v("Note","Create NoteDB");
@@ -128,9 +128,9 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         String deviceInfo= Build.DEVICE+"-"+Build.MODEL+"-"+
                 Build.VERSION.SDK_INT;
         ContentValues values=new ContentValues();
-        values.put("user_id",userId);
-        values.put("time",nowDate);
-        values.put("device",deviceInfo);
+        values.put(User_Info.USER_ID,userId);
+        values.put(Login_Info.TIME,nowDate);
+        values.put(Login_Info.DEVICE,deviceInfo);
         try{
             mWDB.beginTransaction();
             long res=mWDB.insert(TABLE_LOGIN_INFO,null, values);
@@ -150,8 +150,8 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     //通过user_id查询用户信息;
     public User_Info queryUserInfoByUserId(String UserId){
         openReadLink();
-        Cursor cursor=mRDB.query(TABLE_USER_INFO,new String[]{"user_id","name","password","gender","age"},
-                "user_id=?",new String[]{UserId},null,null,null);
+        Cursor cursor=mRDB.query(TABLE_USER_INFO,new String[]{User_Info.USER_ID,User_Info.NAME,User_Info.PASSWORD,User_Info.GENDER,User_Info.AGE},
+                User_Info.USER_ID+"=?",new String[]{UserId},null,null,null);
         User_Info info=new User_Info();
         if(cursor.moveToFirst()){
             info.user_id=cursor.getString(0);
@@ -169,11 +169,11 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     public void insertUserInfoByUserInfo(User_Info info) {
         openWriteLink();
         ContentValues values=new ContentValues();
-        values.put("user_id",info.user_id);
-        values.put("name",info.name);
-        values.put("age",info.age);
-        values.put("password",info.password);
-        values.put("gender",info.gender);
+        values.put(User_Info.USER_ID,info.user_id);
+        values.put(User_Info.NAME,info.name);
+        values.put(User_Info.AGE,info.age);
+        values.put(User_Info.PASSWORD,info.password);
+        values.put(User_Info.GENDER,info.gender);
         try{
             mWDB.beginTransaction();
             long res=mWDB.insert(TABLE_USER_INFO,null, values);
@@ -192,8 +192,8 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     //查找指定user_id的note;
     public Note queryNoteByUserId(String UserId) {
         openReadLink();
-        Cursor cursor=mRDB.query(TABLE_NOTES_INFO,new String[]{"note_id","user_id","note_content"},
-                "user_id=?",new String[]{UserId},null,null,null);
+        Cursor cursor=mRDB.query(TABLE_NOTES_INFO,new String[]{Note.NOTE_ID,User_Info.USER_ID,Note.CONTENT},
+                User_Info.USER_ID+"=?",new String[]{UserId},null,null,null);
         Note note=new Note();
         if(cursor.moveToFirst()){
             note.note_id=cursor.getInt(0);
@@ -209,10 +209,10 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     public void updateNoteContentByUserId(String content, String UserId) {
         openWriteLink();
         ContentValues values=new ContentValues();
-        values.put("note_content",content);
+        values.put(Note.CONTENT,content);
         try{
             mWDB.beginTransaction();
-            long res=mWDB.update(TABLE_NOTES_INFO,values,"user_id=?",
+            long res=mWDB.update(TABLE_NOTES_INFO,values,User_Info.USER_ID+"=?",
                     new String[]{UserId});
             if(res==-1){
                 Log.v("Note","Update NoteContent Failed");
@@ -229,8 +229,8 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     public ArrayList<Login_Info> queryLoginInfoByUserId(String UserId) {
         openReadLink();
         ArrayList<Login_Info> listLoginInfo=new ArrayList<Login_Info>();
-        Cursor cursor=mRDB.query(TABLE_LOGIN_INFO,new String[]{"info_id","user_id","time","device"},
-                "user_id=?",new String[]{UserId},null,null,"time DESC");
+        Cursor cursor=mRDB.query(TABLE_LOGIN_INFO,new String[]{Login_Info.INFO_ID,User_Info.USER_ID,Login_Info.TIME,Login_Info.DEVICE},
+                User_Info.USER_ID+"=?",new String[]{UserId},null,null,"time DESC");
         while(cursor.moveToNext()){
             Login_Info info=new Login_Info();
             info.info_id=cursor.getInt(0);
@@ -249,7 +249,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         openWriteLink();
         try{
             mWDB.beginTransaction();
-            long res=mWDB.update(TABLE_USER_INFO,values,"user_id=?",
+            long res=mWDB.update(TABLE_USER_INFO,values,User_Info.USER_ID+"=?",
                     new String[]{UserId});
             if(res==-1){
                 Log.v("Note","Update UserInfo Failed");
@@ -266,8 +266,8 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     public void insertNoteByUserId(String UserId, String noteContent) {
         openWriteLink();
         ContentValues values=new ContentValues();
-        values.put("user_id",UserId);
-        values.put("note_content",noteContent);
+        values.put(User_Info.USER_ID,UserId);
+        values.put(Note.CONTENT,noteContent);
         try{
             mWDB.beginTransaction();
             long res=mWDB.insert(TABLE_NOTES_INFO,null,values);

@@ -53,11 +53,9 @@ public class NoteActivity extends AppCompatActivity {
 
         //获取传入的userId;
         Intent intent=getIntent();
-        DEFAULT_USER_ID=intent.getStringExtra("userId");
+        DEFAULT_USER_ID=intent.getStringExtra(User_Info.USER_ID);
 
         loadNoteLayout();
-
-        //实现该组件对应按钮;
     }
 
     //加载用户信息相关内容;
@@ -99,7 +97,7 @@ public class NoteActivity extends AppCompatActivity {
         et_password.setText(info.password);
         et_name.setText(info.name);
         et_age.setText(String.valueOf(info.age));
-        if(info.gender.equals("male")){
+        if(info.gender.equals(User_Info.GENDER_MALE)){
             RadioButton rb_male=rg_gender.findViewById(R.id.radioButton_user_info_male);
             rb_male.setChecked(true);
         }
@@ -140,29 +138,29 @@ public class NoteActivity extends AppCompatActivity {
                 info.age=Integer.parseInt(et_age.getText().toString());
                 info.name=et_name.getText().toString();
                 if(rb_checked==R.id.radioButton_user_info_male){
-                    info.gender="male";
+                    info.gender=User_Info.GENDER_MALE;
                 }
                 else{
-                    info.gender="female";
+                    info.gender=User_Info.GENDER_FEMALE;
                 }
 
                 User_Info preInfo=mDBHelper.queryUserInfoByUserId(DEFAULT_USER_ID);
                 ContentValues values=new ContentValues();
                 boolean flag=false;
                 if(!info.password.equals(preInfo.password)){
-                    values.put("password",info.password);
+                    values.put(User_Info.PASSWORD,info.password);
                     flag=true;
                 }
                 if(info.age!=preInfo.age){
-                    values.put("age",info.age);
+                    values.put(User_Info.AGE,info.age);
                     flag=true;
                 }
                 if(!info.name.equals(preInfo.name)){
-                    values.put("name",info.name);
+                    values.put(User_Info.NAME,info.name);
                     flag=true;
                 }
                 if(!info.gender.equals(preInfo.gender)){
-                    values.put("gender",info.gender);
+                    values.put(User_Info.GENDER,info.gender);
                     flag=true;
                 }
                 if(flag){
@@ -232,7 +230,7 @@ public class NoteActivity extends AppCompatActivity {
     }
 
     protected void onDestroy(){
-        mDBHelper.colseLink();
+        mDBHelper.closeLink();
         super.onDestroy();
     }
 }

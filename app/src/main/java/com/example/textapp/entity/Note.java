@@ -1,6 +1,11 @@
 package com.example.textapp.entity;
 
 public class Note {
+
+    public static final String NOTE_ID="note_id";
+
+    public static final String CONTENT="note_content";
+
     public int note_id;
     public String user_id;
     public String content;
