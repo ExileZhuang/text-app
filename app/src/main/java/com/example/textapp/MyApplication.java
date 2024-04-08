@@ -4,12 +4,13 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 import com.example.textapp.TCPClient.TCPClient;
+import com.example.textapp.TCPClient.TCPClientThread;
 
 public class MyApplication extends Application {
 
     private static MyApplication mApp;
 
-    private TCPClient mClient;
+    private TCPClient mClient=null;
 
 
     public static MyApplication getInstance(){
@@ -20,11 +21,14 @@ public class MyApplication extends Application {
         super.onCreate();
         mApp=this;
         mClient=new TCPClient();
-        mClient.Test();
     }
 
     public void onTerminate(){
         super.onTerminate();
+    }
+
+    public TCPClient getClient(){
+        return mClient;
     }
 
     public void onConfigurationChanged(Configuration newConfig){

@@ -20,7 +20,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.textapp.MyApplication;
 import com.example.textapp.R;
+import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.Note;
@@ -35,6 +37,8 @@ public class NoteActivity extends AppCompatActivity {
 
     private String DEFAULT_USER_ID;
 
+    private TCPClient mClient;
+
     protected void onCreate(Bundle saveInstanceState){
         super.onCreate(saveInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -43,6 +47,9 @@ public class NoteActivity extends AppCompatActivity {
         mDBHelper=NotesDBHelper.getInstance(this);
         mDBHelper.openReadLink();
         mDBHelper.openWriteLink();
+
+        //获取客户端;
+        mClient= MyApplication.getInstance().getClient();
 
         //获取传入的userId;
         Intent intent=getIntent();

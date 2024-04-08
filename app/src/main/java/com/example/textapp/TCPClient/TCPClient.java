@@ -1,57 +1,25 @@
 package com.example.textapp.TCPClient;
 
-import android.util.Log;
+import com.example.textapp.entity.MainHandler;
+import com.example.textapp.entity.ThreadHandler;
 
-import com.example.textapp.entity.MyMessage;
+//用于实现TCPClientThread与Application UI等主线程之间的接口;
+//封装handler实现两者间通信;
+public class TCPClient {
 
-import java.net.*;
-import java.io.*;
+    private MainHandler reciveHandler;
+    //主线程中reciveHandler即子线程中的sendHandler,接受由子线程发送的消息;
 
-public class TCPClient{
+    private ThreadHandler sendHandler;
+    //主线程中sendhandler即子线程中的reciveHandler,发送消息给子线程;
 
-    public static final String SERVER_IP="192.168.56.1";
+    private TCPClientThread thread;
 
-    public static final int SERVER_PORT=8080;
-
-    private BufferedReader input=null;
-
-    private Socket socket;
-
+    //Attention:如果服务器未开启会形成阻塞,app无法运行;
     public TCPClient(){
-        try{
-            socket=new Socket(SERVER_IP,SERVER_PORT);
-            //Log.v("Note","Connect Status"+String.valueOf(socket.isConnected()));
-            input=new BufferedReader(new InputStreamReader(socket.getInputStream(),"utf-8"));
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        reciveHandler =new MainHandler();
+        thread=new TCPClientThread(reciveHandler);
+        thread.start();
+        sendHandler=thread.getReciveHandler();
     }
-
-    public void sendString(String str){
-        try{
-            BufferedWriter output=new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
-            output.write(str);
-            output.flush();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void sendMyMessage(MyMessage message){
-        sendString(message.toString());
-    }
-
-    public void Test(){
-        try{
-            String content="hello,world\n";
-            sendString(content);
-            String ans;
-            while((ans=input.readLine())!=null){
-                Log.v("Note","Recive Message:"+ans);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
 }

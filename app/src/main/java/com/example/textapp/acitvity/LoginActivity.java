@@ -17,6 +17,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.textapp.MyApplication;
 import com.example.textapp.R;
 import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
@@ -27,7 +28,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private NotesDBHelper mDBHelper;
 
-    //private TCPClient mClient;
+    private TCPClient mClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +36,8 @@ public class LoginActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_login);
 
-        //打开客户端;
-//        mClient= MyApplication.getInstance().mClient;
-//        new Thread(mClient).start();
+        //获取客户端;
+        mClient= MyApplication.getInstance().getClient();
 
         //打开数据库链接;
         mDBHelper=NotesDBHelper.getInstance(this);
