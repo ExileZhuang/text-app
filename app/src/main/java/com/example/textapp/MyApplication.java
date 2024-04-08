@@ -4,7 +4,6 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 import com.example.textapp.TCPClient.TCPClient;
-import com.example.textapp.TCPClient.TCPClientThread;
 
 public class MyApplication extends Application {
 

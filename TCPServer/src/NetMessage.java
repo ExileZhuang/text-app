@@ -2,7 +2,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.*;
 
-public class MyMessage {
+public class NetMessage {
 
     //传递的json中各项key的值;
     public static final String MESSAGE_TYPE="MessageType";
@@ -61,11 +61,11 @@ public class MyMessage {
 
     private JSONObject json;
 
-    public MyMessage(){
+    public NetMessage(){
         json=new JSONObject();
     }
 
-    public MyMessage(String jsonStr){
+    public NetMessage(String jsonStr){
         json=new JSONObject(jsonStr);
     }
 

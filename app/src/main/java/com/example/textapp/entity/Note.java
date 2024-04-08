@@ -2,6 +2,7 @@ package com.example.textapp.entity;
 
 public class Note {
 
+    public static final String TABLE_NOTE="notes_info";
     public static final String NOTE_ID="note_id";
 
     public static final String CONTENT="note_content";

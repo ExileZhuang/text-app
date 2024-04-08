@@ -5,7 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.*;
 
-public class MyMessage {
+public class NetMessage {
 
     //传递的json中各项key的值;
     public static final String MESSAGE_TYPE="MessageType";
@@ -29,7 +29,7 @@ public class MyMessage {
     // TableName:table_name,
     // QueryColumns:[column1,column2,...],
     // Selections:{key1:value1,key2:value2,...},}
-    //test:{MessageType:"1",TableName:"user_info",QueryColumns:[password],Selections:[{"user_id","18460399833"}]};
+    //test:{MessageType:"1",TableName:"user_info",QueryColumns:[password],Selections:[{"user_id":"18460399833"}]};
 
     public static final String MESSAGE_TYPE_INSERT="2";
     public static final String VALUES="Values";
@@ -64,11 +64,11 @@ public class MyMessage {
 
     private JSONObject json;
 
-    public MyMessage(){
+    public NetMessage(){
         json=new JSONObject();
     }
 
-    public MyMessage(String jsonStr){
+    public NetMessage(String jsonStr){
         try{
             json=new JSONObject(jsonStr);
         }catch (JSONException e){

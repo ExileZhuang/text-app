@@ -28,34 +28,34 @@ public class ServerThread implements Runnable{
         }
     }
 
-    private void sendMessage(MyMessage message){
+    private void sendMessage(NetMessage message){
         sendString(message.toString());
     }
 
     @Override
     public void run() {
-        Test();
+        //Test();
         try{
             String content=null;
             while((content=input.readLine())!=null){
                 //output.println(mHelper.Test());
-                MyMessage message=new MyMessage(content);
+                NetMessage message=new NetMessage(content);
                 String type=message.getMessageType();
                 switch(type){
-                    case MyMessage.MESSAGE_TYPE_QUERY:
+                    case NetMessage.MESSAGE_TYPE_QUERY:
                         //处理查询的情况;
                         queryMessageProcess(message);
                         break;
 
-                    case MyMessage.MESSAGE_TYPE_INSERT:
+                    case NetMessage.MESSAGE_TYPE_INSERT:
                         insertMessageProcess(message);
                         break;
 
-                    case MyMessage.MESSAGE_TYPE_DELETE:
+                    case NetMessage.MESSAGE_TYPE_DELETE:
                         deleteMessageProcess(message);
                         break;
 
-                    case MyMessage.MESSAGE_TYPE_UPDATE:
+                    case NetMessage.MESSAGE_TYPE_UPDATE:
                         updateMessageProcess(message);
                         break;
                     
@@ -81,15 +81,15 @@ public class ServerThread implements Runnable{
         return;
     }
 
-    public void queryMessageProcess(MyMessage message) {
+    public void queryMessageProcess(NetMessage message) {
         //从message中获取查询列和查询条件;
-        String tableName=message.getString(MyMessage.TABLE_NAME);
-        List<String> queryColumns=message.getListString(MyMessage.QUERYCOLUMNS);
-        Map<String,Object> selections=message.getMap(MyMessage.SELECTIONS);
+        String tableName=message.getString(NetMessage.TABLE_NAME);
+        List<String> queryColumns=message.getListString(NetMessage.QUERYCOLUMNS);
+        Map<String,Object> selections=message.getMap(NetMessage.SELECTIONS);
 
         //执行查询及获得查询结果;
-        MyMessage ansMessage=new MyMessage();
-        ansMessage.put(MyMessage.ANSMESSAGE_TYPE,MyMessage.ANSMESSAGE_TYPE_QUERYRESULTS);
+        NetMessage ansMessage=new NetMessage();
+        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_QUERYRESULTS);
         try{
             List<Map<String,Object>> res=mDBHelper.query(tableName,queryColumns,selections);
             JSONArray array=new JSONArray();
@@ -101,7 +101,7 @@ public class ServerThread implements Runnable{
                 }
                 array.put(json);
             }
-            ansMessage.put(MyMessage.ANSMESSAGE_TYPE_QUERYRESULTS,array);
+            ansMessage.put(NetMessage.ANSMESSAGE_TYPE_QUERYRESULTS,array);
             sendMessage(ansMessage);
         }catch(Exception e){
             e.printStackTrace();
@@ -110,21 +110,21 @@ public class ServerThread implements Runnable{
         //对查询结果进行转化为message并重新发送回客户端;
     }
 
-    public void insertMessageProcess(MyMessage message){
+    public void insertMessageProcess(NetMessage message){
         //获取表名及其插入值;
-        String tableName=message.getString(MyMessage.TABLE_NAME);
-        Map<String,Object> map=message.getMap(MyMessage.VALUES);
+        String tableName=message.getString(NetMessage.TABLE_NAME);
+        Map<String,Object> map=message.getMap(NetMessage.VALUES);
 
         //定义返回结果;
-        MyMessage ansMessage=new MyMessage();
-        ansMessage.put(MyMessage.ANSMESSAGE_TYPE,MyMessage.ANSMESSAGE_TYPE_INSERT);
+        NetMessage ansMessage=new NetMessage();
+        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_INSERT);
         try{
             boolean success=mDBHelper.insert(tableName,map);
             if(success){
-                ansMessage.put(MyMessage.STATUS,MyMessage.STATUS_SUCCESS);
+                ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_SUCCESS);
             }
             else{
-                ansMessage.put(MyMessage.STATUS,MyMessage.STATUS_FAIL);
+                ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
             sendMessage(ansMessage);
         }catch(Exception e){
@@ -132,20 +132,20 @@ public class ServerThread implements Runnable{
         }
     }
 
-    public void updateMessageProcess(MyMessage message){
-        String tableName=message.getString(MyMessage.TABLE_NAME);
-        Map<String,Object> data=message.getMap(MyMessage.VALUES);
-        Map<String,Object> selections=message.getMap(MyMessage.SELECTIONS);
+    public void updateMessageProcess(NetMessage message){
+        String tableName=message.getString(NetMessage.TABLE_NAME);
+        Map<String,Object> data=message.getMap(NetMessage.VALUES);
+        Map<String,Object> selections=message.getMap(NetMessage.SELECTIONS);
 
-        MyMessage ansMessage=new MyMessage();
-        ansMessage.put(MyMessage.ANSMESSAGE_TYPE,MyMessage.ANSMESSAGEE_TYPE_UPDATE);
+        NetMessage ansMessage=new NetMessage();
+        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGEE_TYPE_UPDATE);
         try{
             boolean success=mDBHelper.update(tableName,data,selections);
             if(success){
-                ansMessage.put(MyMessage.STATUS,MyMessage.STATUS_SUCCESS);
+                ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_SUCCESS);
             }
             else{
-                ansMessage.put(MyMessage.STATUS,MyMessage.STATUS_FAIL);
+                ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
             sendMessage(ansMessage);
         }catch(Exception e){
@@ -153,19 +153,19 @@ public class ServerThread implements Runnable{
         }
     }
 
-    private void deleteMessageProcess(MyMessage message) {
-        String tableName=message.getString(MyMessage.TABLE_NAME);
-        Map<String,Object> selections=message.getMap(MyMessage.SELECTIONS);
+    private void deleteMessageProcess(NetMessage message) {
+        String tableName=message.getString(NetMessage.TABLE_NAME);
+        Map<String,Object> selections=message.getMap(NetMessage.SELECTIONS);
 
-        MyMessage ansMessage=new MyMessage();
-        ansMessage.put(MyMessage.ANSMESSAGE_TYPE,MyMessage.ANSMESSAGE_TYPE_DELETE);
+        NetMessage ansMessage=new NetMessage();
+        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_DELETE);
         try{
             boolean success=mDBHelper.delete(tableName,selections);
             if(success){
-                ansMessage.put(MyMessage.STATUS,MyMessage.STATUS_SUCCESS);
+                ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_SUCCESS);
             }
             else{
-                ansMessage.put(MyMessage.STATUS,MyMessage.STATUS_FAIL);
+                ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
             sendMessage(ansMessage);
         }catch(Exception e){

@@ -142,7 +142,7 @@ public class LoginActivity extends AppCompatActivity {
                 
                 if(!correct){
                     //服务器端查询;
-                    correct=mClient.sendQueryPasswordByUserId(info.user_id);
+                    mClient.sendQueryPasswordByUserId(userId);
                 }
                 
                 

@@ -2,6 +2,8 @@ package com.example.textapp.entity;
 
 public class User_Info {
 
+    public static final String TABLE_USER="user_info";
+
     public static final String USER_ID="user_id";
 
     public static final String PASSWORD="password";
