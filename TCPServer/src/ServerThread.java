@@ -20,7 +20,7 @@ public class ServerThread implements Runnable{
     private void sendString(String str){
         try{
             BufferedWriter output=new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
-            output.write(str);
+            output.write(str+"\n");
             output.flush();
             //output.close();
         }catch(Exception e){
@@ -28,7 +28,7 @@ public class ServerThread implements Runnable{
         }
     }
 
-    private void sendMessage(NetMessage message){
+    private void sendNetMessage(NetMessage message){
         sendString(message.toString());
     }
 
@@ -85,24 +85,25 @@ public class ServerThread implements Runnable{
         //从message中获取查询列和查询条件;
         String tableName=message.getString(NetMessage.TABLE_NAME);
         List<String> queryColumns=message.getListString(NetMessage.QUERYCOLUMNS);
-        Map<String,Object> selections=message.getMap(NetMessage.SELECTIONS);
+        //将json转为map;
+        Map<String,String> selections=message.getMap(NetMessage.SELECTIONS);
 
         //执行查询及获得查询结果;
         NetMessage ansMessage=new NetMessage();
         ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_QUERYRESULTS);
         try{
-            List<Map<String,Object>> res=mDBHelper.query(tableName,queryColumns,selections);
+            List<Map<String,String>> res=mDBHelper.query(tableName,queryColumns,selections);
             JSONArray array=new JSONArray();
-            for(Map<String,Object> m:res){
+            for(Map<String,String> m:res){
                 JSONObject json=new JSONObject();
                 for(String key:m.keySet()){
-                    Object val=m.get(key);
+                    String val=m.get(key);
                     json.put(key,val);
                 }
                 array.put(json);
             }
-            ansMessage.put(NetMessage.ANSMESSAGE_TYPE_QUERYRESULTS,array);
-            sendMessage(ansMessage);
+            ansMessage.put(NetMessage.QUERY_RESULTS,array);
+            sendNetMessage(ansMessage);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -113,7 +114,7 @@ public class ServerThread implements Runnable{
     public void insertMessageProcess(NetMessage message){
         //获取表名及其插入值;
         String tableName=message.getString(NetMessage.TABLE_NAME);
-        Map<String,Object> map=message.getMap(NetMessage.VALUES);
+        Map<String,String> map=message.getMap(NetMessage.VALUES);
 
         //定义返回结果;
         NetMessage ansMessage=new NetMessage();
@@ -126,7 +127,7 @@ public class ServerThread implements Runnable{
             else{
                 ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
-            sendMessage(ansMessage);
+            sendNetMessage(ansMessage);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -134,8 +135,8 @@ public class ServerThread implements Runnable{
 
     public void updateMessageProcess(NetMessage message){
         String tableName=message.getString(NetMessage.TABLE_NAME);
-        Map<String,Object> data=message.getMap(NetMessage.VALUES);
-        Map<String,Object> selections=message.getMap(NetMessage.SELECTIONS);
+        Map<String,String> data=message.getMap(NetMessage.VALUES);
+        Map<String,String> selections=message.getMap(NetMessage.SELECTIONS);
 
         NetMessage ansMessage=new NetMessage();
         ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGEE_TYPE_UPDATE);
@@ -147,7 +148,7 @@ public class ServerThread implements Runnable{
             else{
                 ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
-            sendMessage(ansMessage);
+            sendNetMessage(ansMessage);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -155,7 +156,7 @@ public class ServerThread implements Runnable{
 
     private void deleteMessageProcess(NetMessage message) {
         String tableName=message.getString(NetMessage.TABLE_NAME);
-        Map<String,Object> selections=message.getMap(NetMessage.SELECTIONS);
+        Map<String,String> selections=message.getMap(NetMessage.SELECTIONS);
 
         NetMessage ansMessage=new NetMessage();
         ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_DELETE);
@@ -167,7 +168,7 @@ public class ServerThread implements Runnable{
             else{
                 ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
-            sendMessage(ansMessage);
+            sendNetMessage(ansMessage);
         }catch(Exception e){
             e.printStackTrace();
         }

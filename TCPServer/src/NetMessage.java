@@ -81,18 +81,18 @@ public class NetMessage {
         JSONArray list=json.getJSONArray(key);
         List<String> lString=new ArrayList<String>();
         for(int i=0;i<list.length();++i){
-            lString.add(list.getJSONObject(i).toString());
+            lString.add(list.getString(i));
         }
         return lString;
     }
 
-    public Map<String, Object> getMap(String key) {
+    public Map<String, String> getMap(String key) {
         JSONObject object=json.getJSONObject(key);
-        Map<String,Object> m=new HashMap<String,Object>();
+        Map<String,String> m=new HashMap<String,String>();
         Iterator<String> keys=object.keys();
         while(keys.hasNext()){
             String now=keys.next();
-            Object value=object.get(now);
+            String value=object.getString(now);
             m.put(now, value);
         }
         return m;

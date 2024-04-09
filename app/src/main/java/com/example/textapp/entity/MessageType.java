@@ -18,4 +18,10 @@ public class MessageType {
     public static final String BUNDLE_KEY_SELECTIONKEYS="SelectionsKeys";
 
     public static final String BUNDLE_KEY_SELECTIONSVALUES="SelectionsValues";
+
+    public static final String BUNDLE_KEY_RESULTSCOUNT="ResultsCount";
+
+    public static final String BUNDLE_KEY_RESULTS="Results";
+
+    public static final String BUNDLE_KEY_RESULTINDEX="Result";
 }

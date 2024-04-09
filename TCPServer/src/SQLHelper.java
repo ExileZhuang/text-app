@@ -56,26 +56,26 @@ class SQLHelper{
         }
     }
 
-    public List<Map<String,Object>> query(String tableName, List<String> queryColumns, Map<String, Object> selections) {
+    public List<Map<String,String>> query(String tableName, List<String> queryColumns, Map<String, String> selections) {
       String sql="select ";
       for(int i=0;i<queryColumns.size();++i){
         sql=sql+queryColumns.get(i)+" ";
       }
       sql=sql+"from "+tableName+" where ";
       for(String key:selections.keySet()){
-        Object value=selections.get(key);
-        sql=sql+key+"="+value.toString()+" and ";
+        String value=selections.get(key);
+        sql=sql+key+"="+value+" and ";
       }
       sql=sql.substring(0,sql.length()-5);
-      List<Map<String,Object>> list=new ArrayList<Map<String,Object>>();
+      List<Map<String,String>> list=new ArrayList<Map<String,String>>();
       ResultSet result;
       try{
         result=statement.executeQuery(sql);
         while(result.next()){
-            Map<String,Object> data= new HashMap<String,Object>();
+            Map<String,String> data= new HashMap<String,String>();
             for(int i=0;i<queryColumns.size();++i){
                 String key=queryColumns.get(i);
-                Object value=result.getObject(key);
+                String value=result.getObject(key).toString();
                 data.put(key,value);
             }
             list.add(data);
@@ -86,16 +86,16 @@ class SQLHelper{
       return list;
     }
 
-    public boolean insert(String TableName,Map<String,Object> map){
+    public boolean insert(String TableName,Map<String,String> map){
         String sql="insert into "+TableName+"(";
-        List<Object> values=new ArrayList<Object>();
+        List<String> values=new ArrayList<String>();
         for(String key:map.keySet()){
             sql=sql+key+",";
             values.add(map.get(key));
         }
         sql=sql.substring(0,sql.length()-1)+") values(";
-        for(Object value:values){
-            sql=sql+value.toString()+",";
+        for(String value:values){
+            sql=sql+value+",";
         }
         sql=sql.substring(0,sql.length()-1)+")";
         int result=0;
@@ -107,14 +107,14 @@ class SQLHelper{
         return result>0?true:false;
     }
 
-    public boolean update(String TableName,Map<String,Object> data,Map<String,Object> selections){
+    public boolean update(String TableName,Map<String,String> data,Map<String,String> selections){
         String sql="update "+TableName+" SET ";
         for(String key:data.keySet()){
-            sql=sql+key+"="+data.get(key).toString()+",";
+            sql=sql+key+"="+data.get(key)+",";
         }
         sql=sql.substring(0,sql.length()-1)+" WHERE ";
         for(String key:selections.keySet()){
-            sql=sql+key+"="+selections.get(key).toString()+" AND ";
+            sql=sql+key+"="+selections.get(key)+" AND ";
         }
         sql=sql.substring(0, sql.length()-5);
         int result=0;
@@ -126,10 +126,10 @@ class SQLHelper{
         return result>0?true:false;
     }
 
-    public boolean delete(String TableName,Map<String,Object> selections){
+    public boolean delete(String TableName,Map<String,String> selections){
         String sql="DELETE FROM "+TableName+" WHERE ";
         for(String key:selections.keySet()){
-            sql=sql+key+"="+selections.get(key).toString()+" AND ";
+            sql=sql+key+"="+selections.get(key)+" AND ";
         }
         sql=sql.substring(0,sql.length()-5);
         int result=0;

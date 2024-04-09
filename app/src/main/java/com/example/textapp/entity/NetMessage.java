@@ -86,6 +86,16 @@ public class NetMessage {
         return type;
     }
 
+    public String getAnsMessageType(){
+        String type=null;
+        try{
+            type=json.getString(ANSMESSAGE_TYPE);
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return type;
+    }
+
     public String getString(String key){
         String value=null;
         try{
@@ -101,7 +111,7 @@ public class NetMessage {
         try{
             JSONArray list=json.getJSONArray(key);
             for(int i=0;i<list.length();++i){
-                lString.add(list.getJSONObject(i).toString());
+                lString.add(list.getString(i));
             }
         }catch (JSONException e){
             e.printStackTrace();
@@ -109,14 +119,14 @@ public class NetMessage {
         return lString;
     }
 
-    public Map<String, Object> getMap(String key){
-        Map<String,Object> m=new HashMap<String,Object>();
+    public Map<String, String> getMap(String key){
+        Map<String,String> m=new HashMap<String,String>();
         try{
             JSONObject object=json.getJSONObject(key);
             Iterator<String> keys=object.keys();
             while(keys.hasNext()){
                 String now=keys.next();
-                Object value=object.get(now);
+                String value=object.getString(now);
                 m.put(now, value);
             }
         }catch (JSONException e){
@@ -135,5 +145,26 @@ public class NetMessage {
 
     public String toString(){
         return json.toString();
+    }
+
+    public List<Map<String,String>> getQueryResultsFromJSONArray(String key){
+        List<Map<String,String>> result=new ArrayList<Map<String,String>>();
+        try{
+            JSONArray array=json.getJSONArray(key);
+            for(int i=0;i<array.length();i++){
+                JSONObject json=array.getJSONObject(i);
+                Map<String,String> m=new HashMap<String,String>();
+                Iterator<String> keys=json.keys();
+                while(keys.hasNext()){
+                    String now=keys.next();
+                    String value=json.getString(now);
+                    m.put(now,value);
+                }
+                result.add(m);
+            }
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return result;
     }
 }

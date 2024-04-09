@@ -39,10 +39,12 @@ public class TCPClient {
         selections.put(User_Info.USER_ID,UserId);
         ArrayList<String> queryColumn=new ArrayList<>();
         queryColumn.add(User_Info.PASSWORD);
+
         sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selections);
     }
 
     //bundle中数据:tableName,queryColumns,(keys,values)=>selections
+    //发送给子线程让子线程向服务器发起查询并返回查询结果;
     public void sendQueryColumnsBySelectionsToTable(String TableName, ArrayList<String> queryColumns, Map<String,String> selections){
         Message msg=new Message();
         msg.what= MessageType.WHAT_QUERY;
