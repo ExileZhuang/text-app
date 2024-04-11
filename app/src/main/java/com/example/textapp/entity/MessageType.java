@@ -21,7 +21,9 @@ public class MessageType {
 
     public static final String BUNDLE_KEY_RESULTSCOUNT="ResultsCount";
 
-    public static final String BUNDLE_KEY_RESULTS="Results";
-
     public static final String BUNDLE_KEY_RESULTINDEX="Result";
+
+    public static final String BUNDLE_KEY_VALUES="Values";
+
+    public static final String BUNDLE_KEY_KEYS="Keys";
 }

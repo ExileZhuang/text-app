@@ -120,17 +120,12 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     }
 
     //往表login_info中根据userid的登录信息;
-    public void insertLoginInfoByUserId(String userId) {
+    public void insertLoginInfoByUserId(String userId,String time,String Device) {
         openWriteLink();
-        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = new Date(System.currentTimeMillis());
-        String nowDate=formatter.format(date).toString();
-        String deviceInfo= Build.DEVICE+"-"+Build.MODEL+"-"+
-                Build.VERSION.SDK_INT;
         ContentValues values=new ContentValues();
         values.put(User_Info.USER_ID,userId);
-        values.put(Login_Info.TIME,nowDate);
-        values.put(Login_Info.DEVICE,deviceInfo);
+        values.put(Login_Info.TIME,time);
+        values.put(Login_Info.DEVICE,Device);
         try{
             mWDB.beginTransaction();
             long res=mWDB.insert(TABLE_LOGIN_INFO,null, values);

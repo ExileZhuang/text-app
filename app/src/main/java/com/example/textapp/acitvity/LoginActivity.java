@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +24,13 @@ import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
 import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.User_Info;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -142,7 +150,17 @@ public class LoginActivity extends AppCompatActivity {
                 
                 if(!correct){
                     //服务器端查询;
-                    mClient.sendQueryPasswordByUserId(userId);
+                    Map<String,String> selections=new HashMap<>();
+                    selections.put(User_Info.USER_ID,userId);
+                    ArrayList<String> queryColumn=new ArrayList<>();
+                    queryColumn.add(User_Info.PASSWORD);
+                    List<Map<String,String>> results=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selections);
+                    String passwordFromServer=results.get(0).get(User_Info.PASSWORD);
+                    //Log.v("Note","Correct is False");
+                    //assert passwordFromServer != null;
+                    if(passwordFromServer.equals(password)){
+                        correct=true;
+                    }
                 }
                 
                 
@@ -162,7 +180,13 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     //登录成功后对login_info库进行插入本次登录信息;
-                    mDBHelper.insertLoginInfoByUserId(userId);
+                    String time=GetTime();
+                    String Device=GetDevice();
+                    mDBHelper.insertLoginInfoByUserId(userId,time,Device);
+
+                    //对服务端login_info库插入本次登录消息;
+                    //mClient.insertNewValuesToTable();
+
                     //Log.v("Note","Next Activity");
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
                     intent.putExtra(User_Info.USER_ID,info.user_id);
@@ -245,8 +269,12 @@ public class LoginActivity extends AppCompatActivity {
                     //TODO
                     //加入服务器数据库;
 
-                    //本次登录信息记录到数据库并跳转到NoteActivity;
-                    mDBHelper.insertLoginInfoByUserId(info.user_id);
+                    //本次登录信息记录到数据库与远程数据库并跳转到NoteActivity;
+                    String time=GetTime();
+                    String device=GetDevice();
+                    mDBHelper.insertLoginInfoByUserId(info.user_id,time,device);
+
+
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
                     intent.putExtra(User_Info.USER_ID,info.user_id);
                     startActivity(intent);
@@ -278,6 +306,20 @@ public class LoginActivity extends AppCompatActivity {
     protected void onDestroy() {
         mDBHelper.closeLink();
         super.onDestroy();
+    }
+
+    //获取当前时间;
+    public String GetTime(){
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date(System.currentTimeMillis());
+        String nowDate= formatter.format(date);
+        return nowDate;
+    }
+
+    //获取当前设备;
+    public String GetDevice(){
+        String deviceInfo= Build.DEVICE+"-"+Build.MODEL+"-"+Build.BRAND+"-"+ Build.VERSION.SDK_INT;
+        return deviceInfo;
     }
 
 }

@@ -8,7 +8,7 @@ public class NetMessage {
     public static final String MESSAGE_TYPE="MessageType";
     public static final String ANSMESSAGE_TYPE="AnsMessageType";
 
-    public static final String ANSMESSAGE_TYPE_QUERYRESULTS="1";
+    public static final String ANSMESSAGE_TYPE_QUERY="1";
     public static final String QUERY_RESULTS="QueryResults";
     //查询结果用AnsMessageType=1;
     //返回形式:{AndMessageType:"1",
@@ -37,8 +37,8 @@ public class NetMessage {
 
     public static final String ANSMESSAGE_TYPE_INSERT="2";
     public static final String STATUS="Status";
-    public static final int STATUS_SUCCESS=200;
-    public static final int STATUS_FAIL=500;
+    public static final String STATUS_SUCCESS="200";
+    public static final String STATUS_FAIL="500";
     //插入成功返回状态码200，失败返回状态码500;
     //json格式:{AnsMessageType:2,Status:200/500};
 
@@ -73,6 +73,11 @@ public class NetMessage {
         return json.getString(MESSAGE_TYPE);
     }
 
+    public String getAnsMessageType(){
+        String type=json.getString(ANSMESSAGE_TYPE);
+        return type;
+    }
+
     public String getString(String key){
         return json.getString(key);
     }
@@ -105,4 +110,26 @@ public class NetMessage {
     public String toString(){
         return json.toString();
     }
+
+    public List<Map<String,String>> getQueryResults(String key){
+        List<Map<String,String>> result=new ArrayList<Map<String,String>>();
+        try{
+            JSONArray array=json.getJSONArray(key);
+            for(int i=0;i<array.length();i++){
+                JSONObject json=array.getJSONObject(i);
+                Map<String,String> m=new HashMap<String,String>();
+                Iterator<String> keys=json.keys();
+                while(keys.hasNext()){
+                    String now=keys.next();
+                    String value=json.getString(now);
+                    m.put(now,value);
+                }
+                result.add(m);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
 }

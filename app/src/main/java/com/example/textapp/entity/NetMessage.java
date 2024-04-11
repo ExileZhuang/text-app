@@ -11,7 +11,7 @@ public class NetMessage {
     public static final String MESSAGE_TYPE="MessageType";
     public static final String ANSMESSAGE_TYPE="AnsMessageType";
 
-    public static final String ANSMESSAGE_TYPE_QUERYRESULTS="1";
+    public static final String ANSMESSAGE_TYPE_QUERY ="1";
     public static final String QUERY_RESULTS="QueryResults";
     //查询结果用AnsMessageType=1;
     //返回形式:{AndMessageType:"1",
@@ -40,8 +40,8 @@ public class NetMessage {
 
     public static final String ANSMESSAGE_TYPE_INSERT="2";
     public static final String STATUS="Status";
-    public static final int STATUS_SUCCESS=200;
-    public static final int STATUS_FAIL=500;
+    public static final String STATUS_SUCCESS="200";
+    public static final String STATUS_FAIL="500";
     //插入成功返回状态码200，失败返回状态码500;
     //json格式:{AnsMessageType:2,Status:200/500};
 

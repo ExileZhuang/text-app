@@ -1,15 +1,13 @@
 package com.example.textapp.TCPClient;
 
 import android.os.Bundle;
-import android.os.Looper;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Message;
-import android.util.JsonReader;
 import android.util.Log;
 
-import com.example.textapp.entity.MainHandler;
 import com.example.textapp.entity.MessageType;
 import com.example.textapp.entity.NetMessage;
-import com.example.textapp.entity.ThreadHandler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,13 +16,10 @@ import org.json.JSONObject;
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
-public class TCPClientThread extends Thread{
+public class TCPClientThread extends HandlerThread {
 
     public static final String SERVER_IP="192.168.56.1";
 
@@ -35,20 +30,25 @@ public class TCPClientThread extends Thread{
     private Socket socket;
 
 
-    private MainHandler sendHandler;
+    private Handler sendHandler;
     //handler发送给主线程消息的handler;
 
-    private ThreadHandler reciveHandler;
+    private Handler receiveHandler;
     //接受主线程消息的handler;
 
-    public TCPClientThread(MainHandler mainHandler){
-        input=null;
+    public TCPClientThread(Handler mainHandler, String ThreadName){
+        super(ThreadName);
         socket=null;
+        input=null;
         sendHandler =mainHandler;
-        reciveHandler=null;
+        receiveHandler =null;
     }
 
-    public void sendString(String str){
+    public void setReceiveHandler(Handler handler){
+        receiveHandler=handler;
+    }
+
+    public void sendStringToServer(String str){
         try{
             BufferedWriter output=new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
             output.write(str+"\n");
@@ -58,11 +58,18 @@ public class TCPClientThread extends Thread{
         }
     }
 
-    public void sendNetMessage(NetMessage message){
-        sendString(message.toString());
+    public void sendNetMessageToServer(NetMessage message){
+        sendStringToServer(message.toString());
     }
 
-    public String reciveNetMessage(){
+
+    //发送Message给主线程;
+    public void sendMessageToMainThread(Message msg){
+        sendHandler.sendMessage(msg);
+    }
+
+    //从服务器接收一条信息;
+    public String receiveNetMessage(){
         String msg=null;
         try{
             while((msg=input.readLine())!=null){
@@ -77,28 +84,20 @@ public class TCPClientThread extends Thread{
     public void Test(){
         try{
             String content="hello,world";
-            sendString(content);
-            Log.v("Note","Send Messagge: "+content);
+            sendStringToServer(content);
+            Log.v("Note","Send Message: "+content);
             String ans;
             while((ans=input.readLine())!=null){
                 break;
             }
-            Log.v("Note","Recive Message:"+ans);
+            Log.v("Note","Receive Message:"+ans);
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    public ThreadHandler getReciveHandler(){
-        while(reciveHandler==null){
-            //堵塞直到reciveHandler建立;
-        }
-        return reciveHandler;
-    }
-
     @Override
-    public void run() {
-        //建立连接;
+    public void run(){
         try{
             socket=new Socket(SERVER_IP,SERVER_PORT);
             //Log.v("Note","Connect Status:"+String.valueOf(socket.isConnected()));
@@ -106,15 +105,7 @@ public class TCPClientThread extends Thread{
         }catch (Exception e){
             e.printStackTrace();
         }
-
-        //创建Looper用于子、父进程间通信;
-        Looper.prepare();
-        reciveHandler=new ThreadHandler(Looper.myLooper(),this);
-
-
-
-        //不断轮询查看有无消息;
-        Looper.loop();
+        super.run();
     }
 
 
@@ -147,23 +138,63 @@ public class TCPClientThread extends Thread{
             e.printStackTrace();
         }
         sendMessage.put(NetMessage.SELECTIONS,json);
-        sendNetMessage(sendMessage);
+
+        sendNetMessageToServer(sendMessage);
         Log.v("Note","Send Message:"+sendMessage);
 
-        String reciveMessageStr=reciveNetMessage();
-        Log.v("Note","Recive NetMessage:"+reciveMessageStr);
+        String receiveMessageStr= receiveNetMessage();
+        Log.v("Note","Receive NetMessage:"+receiveMessageStr);
 
         List<Map<String,String>> results=new ArrayList<Map<String,String>>();
         try{
-            NetMessage reciveMessage=new NetMessage(reciveMessageStr);
-            if(!reciveMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_QUERYRESULTS)){
+            NetMessage receiveMessage=new NetMessage(receiveMessageStr);
+            if(!receiveMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_QUERY)){
                 Log.v("Note","Too busy For Request");
                 return results;
             }
-            results=reciveMessage.getQueryResultsFromJSONArray(NetMessage.QUERY_RESULTS);
+            results=receiveMessage.getQueryResultsFromJSONArray(NetMessage.QUERY_RESULTS);
         }catch (Exception e){
             e.printStackTrace();
         }
+        Log.v("Note","Result Size:"+results.size());
         return results;
+    }
+
+    public boolean insertValuesToServer(Message msg){
+        Bundle bundle=msg.getData();
+        ArrayList<String> keys=bundle.getStringArrayList(MessageType.BUNDLE_KEY_KEYS);
+        ArrayList<String> values=bundle.getStringArrayList(MessageType.BUNDLE_KEY_VALUES);
+        String tableName=bundle.getString(MessageType.BUNDLE_KEY_TABLENAME);
+
+        NetMessage sendMessage=new NetMessage();
+
+        sendMessage.put(NetMessage.MESSAGE_TYPE,NetMessage.MESSAGE_TYPE_INSERT);
+        sendMessage.put(NetMessage.TABLE_NAME,tableName);
+
+        JSONObject json=new JSONObject();
+
+        try{
+            for(int i=0;i<keys.size();++i){
+                json.put(keys.get(i),values.get(i));
+            }
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        sendMessage.put(NetMessage.VALUES,json);
+
+        sendNetMessageToServer(sendMessage);
+        Log.v("Note","Send Message:"+sendMessage);
+
+        String rcvMessageStr= receiveNetMessage();
+        Log.v("Note","Recive Message:"+rcvMessageStr);
+
+        NetMessage rcvMessage=new NetMessage(rcvMessageStr);
+        if(!rcvMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_INSERT)){
+            Log.v("Note","Too Busy For Request");
+            return false;
+        }
+        String status=rcvMessage.getString(NetMessage.STATUS);
+        //Log.v("Note",status);
+        return status.equals(NetMessage.STATUS_SUCCESS);
     }
 }

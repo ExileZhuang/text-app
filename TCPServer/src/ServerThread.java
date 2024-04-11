@@ -90,7 +90,7 @@ public class ServerThread implements Runnable{
 
         //执行查询及获得查询结果;
         NetMessage ansMessage=new NetMessage();
-        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_QUERYRESULTS);
+        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_QUERY);
         try{
             List<Map<String,String>> res=mDBHelper.query(tableName,queryColumns,selections);
             JSONArray array=new JSONArray();
