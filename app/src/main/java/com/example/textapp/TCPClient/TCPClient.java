@@ -2,7 +2,6 @@ package com.example.textapp.TCPClient;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
@@ -21,38 +20,23 @@ import java.util.Queue;
 //封装handler实现两者间通信;
 public class TCPClient {
 
-    private Handler receiveHandler;
-    //主线程中reciveHandler即子线程中的sendHandler,接受由子线程发送的消息;
-
+    public static final String SOCKET_THREAD_NAME="SocketThread";
     private Handler sendHandler;
-    //主线程中sendhandler即子线程中的reciveHandler,发送消息给子线程;
+    //主线程中sendHandler即子线程中的receiveHandler,发送消息给子线程;
 
     private TCPClientThread thread;
 
 
-    //存储用于query消息接收的queue;以下同理;
-    private Queue<Message> queryQueue;
-
-    private Queue<Message> insertQueue;
-
-    private Queue<Message> deleteQueue;
-
-    private Queue<Message> updateQueue;
+    //存储用于query消息接收的queue,用于主线程堵塞运行;
+    // 其余不接受消息从子线程返回的消息,发送失败或成功的处理在子线程中完成;
+     private Queue<Message> queryQueue;
 
     //Attention:如果服务器未开启会形成阻塞,app无法运行;
     public TCPClient(){
-        //获得receiveHandler并处理;
-        receiveHandler=new Handler(Looper.getMainLooper()){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
-                pushMessageIntoQueue(msg);
-            }
-        };
 
         //要求服务器打开，不然会堵塞;
         //定义handler线程处理;
-        thread=new TCPClientThread(receiveHandler,"SocketThread");
+        thread=new TCPClientThread(SOCKET_THREAD_NAME);
         thread.start();
 
 
@@ -75,11 +59,8 @@ public class TCPClient {
                         message1.what = MessageType.WHAT_QUERY;
                         Bundle bundle = ListMapToBundle(results);
                         message1.setData(bundle);
-
-                        Log.v("Note", "Send To MainThread:" + message1.what);
-
-                        //发送消息给主线程handler告知结果;
-                        thread.sendMessageToMainThread(message1);
+                        //将信息加入对应messageQueue中;
+                        queryQueue.add(message1);
                         break;
                     case MessageType.WHAT_INSERT:
                         int cnt = 0;
@@ -87,9 +68,6 @@ public class TCPClient {
                             cnt++;
                             //发送失败最多五次则跳出;
                         }
-                        Message message2 = new Message();
-                        message2.what = MessageType.WHAT_INSERT;
-                        thread.sendMessageToMainThread(message2);
                         break;
                     case MessageType.WHAT_DELETE:
                         break;
@@ -104,9 +82,6 @@ public class TCPClient {
 
         //初始化各个queue;
         queryQueue=new LinkedList<Message>();
-        insertQueue=new LinkedList<Message>();
-        updateQueue=new LinkedList<Message>();
-        deleteQueue=new LinkedList<Message>();
     }
 
 
@@ -138,34 +113,13 @@ public class TCPClient {
     }
 
 
-    //将指定message加入队列中并使发送消息给子线程的函数阻塞等待结果;
-    public void pushMessageIntoQueue(Message msg){
-        Log.v("Note","Push Message");
-        switch(msg.what){
-            case MessageType.WHAT_QUERY:
-                Log.v("Note","QueryQueue Get Message");
-                queryQueue.offer(msg);
-                break;
-            case MessageType.WHAT_INSERT:
-                insertQueue.offer(msg);
-                break;
-            case MessageType.WHAT_DELETE:
-                deleteQueue.offer(msg);
-                break;
-            case MessageType.WHAT_UPDATE:
-                updateQueue.offer(msg);
-                break;
-            default:break;
-        }
-    }
-
     //将bundle解析成为List<map<String,String>>即查询结果;
     public List<Map<String,String>> BundleToListMap(Bundle bundle){
         List<Map<String,String>> results=new ArrayList<Map<String,String>>();
         int count=bundle.getInt(MessageType.BUNDLE_KEY_RESULTSCOUNT);
         ArrayList<String> columns=bundle.getStringArrayList(MessageType.BUNDLE_KEY_QUERYCOLUMNS);
         for(int i=0;i<count;++i){
-            String index=MessageType.BUNDLE_KEY_RESULTINDEX+String.valueOf(i);
+            String index=MessageType.BUNDLE_KEY_RESULTINDEX+ i;
             ArrayList<String> values=bundle.getStringArrayList(index);
             Map<String,String> map=new HashMap<String,String>();
             for(int j=0;j<values.size();++j){
@@ -209,7 +163,7 @@ public class TCPClient {
         return results;
     }
 
-    public void inserNewValuesToTable(String tableName,Map<String,String> Values){
+    public void insertNewValuesToTable(String tableName,Map<String,String> Values){
         Message sndMessage=new Message();
         sndMessage.what=MessageType.WHAT_INSERT;
         Bundle bundle=new Bundle();
@@ -227,10 +181,6 @@ public class TCPClient {
         sndMessage.setData(bundle);
 
         sendHandler.sendMessage(sndMessage);
-        while(insertQueue.isEmpty()){
-            //等待插入结果讯息;
-        }
-        //获取返回讯息;
-        Message rcvMessage=insertQueue.poll();
+        //非堵塞运行,发送完插入消息后即不管子线程处理，继续在主线程运行;
     }
 }

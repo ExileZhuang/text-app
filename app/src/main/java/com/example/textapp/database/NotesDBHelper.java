@@ -139,7 +139,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         }finally{
             mWDB.endTransaction();
         }
-        Log.v("Note","Insert Login Infomation By UserId");
+        Log.v("Note","Insert Login Information By UserId");
     }
 
     //通过user_id查询用户信息;

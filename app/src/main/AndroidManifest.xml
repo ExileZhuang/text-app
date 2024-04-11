@@ -12,9 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".acitvity.LoginActivity"
-            android:exported="true"
-            android:screenOrientation="landscape">
+        <activity android:name=".activity.LoginActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".acitvity.NoteActivity"/>
+        <activity android:name=".activity.NoteActivity"/>
     </application>
 
 </manifest>

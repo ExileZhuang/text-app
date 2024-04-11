@@ -29,19 +29,14 @@ public class TCPClientThread extends HandlerThread {
 
     private Socket socket;
 
-
-    private Handler sendHandler;
-    //handler发送给主线程消息的handler;
-
     private Handler receiveHandler;
     //接受主线程消息的handler;
 
-    public TCPClientThread(Handler mainHandler, String ThreadName){
+    public TCPClientThread(String ThreadName){
         super(ThreadName);
         socket=null;
         input=null;
-        sendHandler =mainHandler;
-        receiveHandler =null;
+        receiveHandler=null;
     }
 
     public void setReceiveHandler(Handler handler){
@@ -60,12 +55,6 @@ public class TCPClientThread extends HandlerThread {
 
     public void sendNetMessageToServer(NetMessage message){
         sendStringToServer(message.toString());
-    }
-
-
-    //发送Message给主线程;
-    public void sendMessageToMainThread(Message msg){
-        sendHandler.sendMessage(msg);
     }
 
     //从服务器接收一条信息;
@@ -156,7 +145,6 @@ public class TCPClientThread extends HandlerThread {
         }catch (Exception e){
             e.printStackTrace();
         }
-        Log.v("Note","Result Size:"+results.size());
         return results;
     }
 

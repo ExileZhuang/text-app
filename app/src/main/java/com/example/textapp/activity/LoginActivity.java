@@ -1,4 +1,4 @@
-package com.example.textapp.acitvity;
+package com.example.textapp.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -155,11 +155,11 @@ public class LoginActivity extends AppCompatActivity {
                     ArrayList<String> queryColumn=new ArrayList<>();
                     queryColumn.add(User_Info.PASSWORD);
                     List<Map<String,String>> results=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selections);
-                    String passwordFromServer=results.get(0).get(User_Info.PASSWORD);
-                    //Log.v("Note","Correct is False");
-                    //assert passwordFromServer != null;
-                    if(passwordFromServer.equals(password)){
-                        correct=true;
+                    if(results.size()>0){
+                        String passwordFromServer=results.get(0).get(User_Info.PASSWORD);
+                        if(passwordFromServer.equals(password)){
+                            correct=true;
+                        }
                     }
                 }
                 
@@ -187,7 +187,7 @@ public class LoginActivity extends AppCompatActivity {
                     //对服务端login_info库插入本次登录消息;
                     //mClient.insertNewValuesToTable();
 
-                    //Log.v("Note","Next Activity");
+                    Log.v("Note","Next Activity");
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
                     intent.putExtra(User_Info.USER_ID,info.user_id);
                     startActivity(intent);

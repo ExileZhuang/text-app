@@ -1,4 +1,4 @@
-package com.example.textapp.acitvity;
+package com.example.textapp.activity;
 
 import android.content.ContentValues;
 import android.content.Intent;
