@@ -165,7 +165,7 @@ public class NoteActivity extends AppCompatActivity {
                 }
                 if(flag){
                     //本地数据库更新;
-                    mDBHelper.updateUerInfoByUserId(DEFAULT_USER_ID,values);
+                    mDBHelper.updateUserInfoByUserId(DEFAULT_USER_ID,values);
 
                     //TODO;
                     //服务器更新相关数据;

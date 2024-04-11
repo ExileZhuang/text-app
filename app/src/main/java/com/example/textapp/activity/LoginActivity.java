@@ -23,6 +23,7 @@ import com.example.textapp.R;
 import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
 import com.example.textapp.database.NotesDBHelper;
+import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.User_Info;
 
 import java.text.SimpleDateFormat;
@@ -30,7 +31,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -124,10 +127,6 @@ public class LoginActivity extends AppCompatActivity {
                 et_userId.setText(storedId);
             }
         }
-
-
-        //保存密码:不需要抓取checkedBox的checked情况改变做出处理;
-
         //登录实现;
         btn_login.setOnClickListener(new View.OnClickListener(){
 
@@ -138,6 +137,11 @@ public class LoginActivity extends AppCompatActivity {
                 EditText et_password=findViewById(R.id.editText_password);
                 String userId=et_userId.getText().toString();
                 String password=et_password.getText().toString();
+
+                if(userId.isEmpty() || password.isEmpty()){
+                    Toast.makeText(getApplicationContext(),"账号或密码不能为空",Toast.LENGTH_LONG).show();
+                    return;
+                }
 
                 //读取账号密码并判断是否合法;
                 boolean correct=false;
@@ -155,10 +159,38 @@ public class LoginActivity extends AppCompatActivity {
                     ArrayList<String> queryColumn=new ArrayList<>();
                     queryColumn.add(User_Info.PASSWORD);
                     List<Map<String,String>> results=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selections);
-                    if(results.size()>0){
+                    if(!results.isEmpty()){
                         String passwordFromServer=results.get(0).get(User_Info.PASSWORD);
                         if(passwordFromServer.equals(password)){
+                            //成功找到对应账号密码;
                             correct=true;
+
+                            //由于本地数据库未能成功匹配该账号密码，因此说明该账号本地存储的账号密码与服务器端不一致或者本地无该账号密码，因此更新或插入该信息;
+                            ArrayList<String> queryColumns=new ArrayList<>();
+                            queryColumns.add(User_Info.PASSWORD);
+                            queryColumns.add(User_Info.AGE);
+                            queryColumns.add(User_Info.NAME);
+                            queryColumns.add(User_Info.GENDER);
+                            Map<String,String> selection=new HashMap<>();
+                            selection.put(User_Info.USER_ID,userId);
+                            List<Map<String,String>> queryResults=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumns,selection);
+                            Map<String,String> userinfoMap=queryResults.get(0);
+                            User_Info newInfo=new User_Info();
+                            newInfo.user_id=userId;
+                            newInfo.password=userinfoMap.get(User_Info.PASSWORD);
+                            newInfo.age=Integer.parseInt(Objects.requireNonNull(userinfoMap.get(User_Info.AGE)));
+                            newInfo.gender=userinfoMap.get(User_Info.GENDER);
+                            newInfo.name=userinfoMap.get(User_Info.NAME);
+                            if(info.user_id==null){
+                                //本地未有该账号信息时:从服务器获取全部信息并插入到本地数据库;
+                                //从服务器获取所有信息;
+                                mDBHelper.insertUserInfoByUserInfo(newInfo);
+                            }
+                            else{
+                                //本地有该账号信息时,从服务器获取所有信息并更新到本地数据库;
+                                mDBHelper.updateUserInfoByUserId(newInfo);
+                            }
+
                         }
                     }
                 }
@@ -179,17 +211,12 @@ public class LoginActivity extends AppCompatActivity {
                         mUtil.writeBoolean(SharedUtil.RESTOREDPASSWORD, false);
                     }
 
-                    //登录成功后对login_info库进行插入本次登录信息;
-                    String time=GetTime();
-                    String Device=GetDevice();
-                    mDBHelper.insertLoginInfoByUserId(userId,time,Device);
+                    //将本次登录信息插入本地和服务端;
+                    insertLoginInfoToLocalAndServer(userId);
 
-                    //对服务端login_info库插入本次登录消息;
-                    //mClient.insertNewValuesToTable();
-
-                    Log.v("Note","Next Activity");
+                    //Log.v("Note","Next Activity");
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
-                    intent.putExtra(User_Info.USER_ID,info.user_id);
+                    intent.putExtra(User_Info.USER_ID,userId);
                     startActivity(intent);
                     finish();
                 }
@@ -249,8 +276,16 @@ public class LoginActivity extends AppCompatActivity {
                     if(rb_gender==R.id.radioButton_gender_female){
                         gender=User_Info.GENDER_FEMALE;
                     }
-                    User_Info info=new User_Info(et_register_userId.getText().toString(),password,
-                            Integer.parseInt(et_age.getText().toString()),gender,et_name.getText().toString());
+                    User_Info info=new User_Info();
+                    info.user_id=userId;
+                    info.password=password;
+                    info.gender=gender;
+                    if(!et_name.getText().toString().isEmpty()){
+                        info.name=et_name.getText().toString();
+                    }
+                    if(!et_age.getText().toString().isEmpty()){
+                        info.age=Integer.parseInt(et_age.getText().toString());
+                    }
 
                     //判断用户注册的userId是否为新id,先从本地数据库读取,再从服务端读取用户数据库判断是否有重复;
                     User_Info queryInfo=mDBHelper.queryUserInfoByUserId(info.user_id);
@@ -261,18 +296,34 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     //对服务端数据库进行查询查询是否存在该账号用户;
-                    //TODO
+                    ArrayList<String> queryColumn=new ArrayList<>();
+                    queryColumn.add(User_Info.USER_ID);
+                    Map<String,String> selection=new HashMap<>();
+                    selection.put(User_Info.USER_ID,info.user_id);
+                    List<Map<String,String>> result=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selection);
+                    if(!result.isEmpty()){
+                        //服务器数据库中已经存在对应账号;
+                        Toast.makeText(getApplicationContext(),"账号已存在",Toast.LENGTH_LONG).show();
+                        return;
+                    }
 
-                    //确定该账号不重复后:加入本地数据库,加入服务器数据库;
+                    //确定该账号不重复后:加入本地数据库;
                     mDBHelper.insertUserInfoByUserInfo(info);
-                    
-                    //TODO
                     //加入服务器数据库;
+                    Map<String,String> values=new HashMap<>();
+                    values.put(User_Info.USER_ID,info.user_id);
+                    values.put(User_Info.PASSWORD,info.password);
+                    values.put(User_Info.GENDER,info.gender);
+                    if(!et_name.getText().toString().isEmpty()){
+                        values.put(User_Info.NAME,info.name);
+                    }
+                    if(!et_age.getText().toString().isEmpty()){
+                        values.put(User_Info.AGE,String.valueOf(info.age));
+                    }
+                    mClient.insertNewValuesToServerTable(User_Info.TABLE_USER,values);
 
-                    //本次登录信息记录到数据库与远程数据库并跳转到NoteActivity;
-                    String time=GetTime();
-                    String device=GetDevice();
-                    mDBHelper.insertLoginInfoByUserId(info.user_id,time,device);
+                    //本次登录信息记录到数据库与远程数据库;
+                    insertLoginInfoToLocalAndServer(info.user_id);
 
 
                     Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
@@ -284,14 +335,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-
     }
-    
-
-
 
     //展示NFC卡登录界面;
     private void showLoginNFCLayout() {
@@ -308,18 +352,23 @@ public class LoginActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    //获取当前时间;
-    public String GetTime(){
-        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = new Date(System.currentTimeMillis());
-        String nowDate= formatter.format(date);
-        return nowDate;
-    }
 
-    //获取当前设备;
-    public String GetDevice(){
-        String deviceInfo= Build.DEVICE+"-"+Build.MODEL+"-"+Build.BRAND+"-"+ Build.VERSION.SDK_INT;
-        return deviceInfo;
+    //获取时间和设备将本次登录信息记录到本地和数据库;
+    public void insertLoginInfoToLocalAndServer(String userId){
+        //登录成功后对login_info库进行插入本次登录信息;
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+        Date date = new Date(System.currentTimeMillis());
+        String time= formatter.format(date);
+        //Device格式:设备名称-型号-品牌-安卓版本;
+        String Device=Build.DEVICE+"-"+Build.MODEL+"-"+Build.BRAND+"-"+ Build.VERSION.SDK_INT;
+        mDBHelper.insertLoginInfoByUserId(userId,time,Device);
+
+        //对服务端数据库插入本次登录信息;
+        Map<String,String> values=new HashMap<>();
+        values.put(Login_Info.TIME,time);
+        values.put(User_Info.USER_ID,userId);
+        values.put(Login_Info.DEVICE,Device);
+        mClient.insertNewValuesToServerTable(Login_Info.TABLE_LOGIN,values);
     }
 
 }

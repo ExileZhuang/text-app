@@ -163,7 +163,7 @@ public class TCPClient {
         return results;
     }
 
-    public void insertNewValuesToTable(String tableName,Map<String,String> Values){
+    public void insertNewValuesToServerTable(String tableName,Map<String,String> Values){
         Message sndMessage=new Message();
         sndMessage.what=MessageType.WHAT_INSERT;
         Bundle bundle=new Bundle();

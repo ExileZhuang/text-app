@@ -5,16 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import android.util.Log;
 
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.Note;
 import com.example.textapp.entity.User_Info;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class NotesDBHelper extends SQLiteOpenHelper {
 
@@ -93,7 +90,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         //info_id:INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
         //user_id:VARCHAR(11) NOT NULL
         //time:yyyy-MM-dd HH:mm:ss
-        //device:设备名称-设备型号-设备安卓版本;
+        //device:设备名称-型号-品牌-安卓版本;
         sql="CREATE TABLE IF NOT EXISTS "+TABLE_LOGIN_INFO+"("+
                 Login_Info.INFO_ID+" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"+
                 User_Info.USER_ID+" VARCHAR(11) NOT NULL,"+
@@ -119,27 +116,30 @@ public class NotesDBHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
-    //往表login_info中根据userid的登录信息;
+    public void insertNewValuesToTable(String Table_name,ContentValues values){
+        openWriteLink();
+        try{
+            mWDB.beginTransaction();
+            long res=mWDB.insert(Table_name,null,values);
+            if(res==-1){
+                Log.v("Note","Insert Values To "+Table_name+" Falied");
+            }
+            mWDB.setTransactionSuccessful();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            mWDB.endTransaction();
+        }
+    }
+
+    //往表login_info中插入根据userid的登录信息;
     public void insertLoginInfoByUserId(String userId,String time,String Device) {
         openWriteLink();
         ContentValues values=new ContentValues();
         values.put(User_Info.USER_ID,userId);
         values.put(Login_Info.TIME,time);
         values.put(Login_Info.DEVICE,Device);
-        try{
-            mWDB.beginTransaction();
-            long res=mWDB.insert(TABLE_LOGIN_INFO,null, values);
-            if(res==-1){
-                //插入失败，日志报错;
-                Log.v("Note","insert login_info "+userId+" failed");
-            }
-            mWDB.setTransactionSuccessful();
-        }catch(Exception e) {
-            e.printStackTrace();
-        }finally{
-            mWDB.endTransaction();
-        }
-        Log.v("Note","Insert Login Information By UserId");
+        insertNewValuesToTable(TABLE_LOGIN_INFO,values);
     }
 
     //通过user_id查询用户信息;
@@ -169,19 +169,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         values.put(User_Info.AGE,info.age);
         values.put(User_Info.PASSWORD,info.password);
         values.put(User_Info.GENDER,info.gender);
-        try{
-            mWDB.beginTransaction();
-            long res=mWDB.insert(TABLE_USER_INFO,null, values);
-            if(res==-1){
-                Log.v("Note","Insert New User_Info Failed");
-            }
-            mWDB.setTransactionSuccessful();
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally{
-            mWDB.endTransaction();
-        }
-        Log.v("Note","Insert User Info By UserInfo");
+        insertNewValuesToTable(TABLE_USER_INFO,values);
     }
 
     //查找指定user_id的note;
@@ -239,8 +227,18 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         return listLoginInfo;
     }
 
+    //通过User_Info类信息更新user_info库;
+    public void updateUserInfoByUserId(User_Info info){
+        ContentValues values=new ContentValues();
+        values.put(User_Info.USER_ID,info.user_id);
+        values.put(User_Info.PASSWORD,info.password);
+        values.put(User_Info.NAME,info.name);
+        values.put(User_Info.AGE,info.age);
+        values.put(User_Info.GENDER,info.gender);
+        updateUserInfoByUserId(info.user_id,values);
+    }
     //根据user_info更新指定user_id的user_info表中内容;
-    public void updateUerInfoByUserId(String UserId,ContentValues values) {
+    public void updateUserInfoByUserId(String UserId, ContentValues values) {
         openWriteLink();
         try{
             mWDB.beginTransaction();
