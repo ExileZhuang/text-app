@@ -15,15 +15,12 @@ public class MessageType {
 
     public static final String BUNDLE_KEY_QUERYCOLUMNS="QueryColumns";
 
-    public static final String BUNDLE_KEY_SELECTIONKEYS="SelectionsKeys";
+    public static final String BUNDLE_KEY_SELECTIONS="Selections";
 
-    public static final String BUNDLE_KEY_SELECTIONSVALUES="SelectionsValues";
 
     public static final String BUNDLE_KEY_RESULTSCOUNT="ResultsCount";
 
     public static final String BUNDLE_KEY_RESULTINDEX="Result";
 
     public static final String BUNDLE_KEY_VALUES="Values";
-
-    public static final String BUNDLE_KEY_KEYS="Keys";
 }

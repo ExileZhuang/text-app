@@ -106,8 +106,7 @@ public class TCPClientThread extends HandlerThread {
 
         String tableName=bundle.getString(MessageType.BUNDLE_KEY_TABLENAME);
         ArrayList<String> queryColumns=bundle.getStringArrayList(MessageType.BUNDLE_KEY_QUERYCOLUMNS);
-        ArrayList<String> keys=bundle.getStringArrayList(MessageType.BUNDLE_KEY_SELECTIONKEYS);
-        ArrayList<String> values=bundle.getStringArrayList(MessageType.BUNDLE_KEY_SELECTIONSVALUES);
+        Bundle selectionBundle=bundle.getBundle(MessageType.BUNDLE_KEY_SELECTIONS);
 
         sendMessage.put(NetMessage.MESSAGE_TYPE,NetMessage.MESSAGE_TYPE_QUERY);
         sendMessage.put(NetMessage.TABLE_NAME,tableName);
@@ -118,15 +117,16 @@ public class TCPClientThread extends HandlerThread {
             array.put(element);
         }
         sendMessage.put(NetMessage.QUERYCOLUMNS,array);
-        JSONObject json=new JSONObject();
+
+        JSONObject selectionJson=new JSONObject();
         try{
-            for(int i=0;i<keys.size();++i){
-                json.put(keys.get(i),values.get(i));
+            for(String key:selectionBundle.keySet()){
+                selectionJson.put(key,selectionBundle.getString(key));
             }
         }catch (JSONException e){
             e.printStackTrace();
         }
-        sendMessage.put(NetMessage.SELECTIONS,json);
+        sendMessage.put(NetMessage.SELECTIONS,selectionJson);
 
         sendNetMessageToServer(sendMessage);
         Log.v("Note","Send Message:"+sendMessage);
@@ -150,8 +150,8 @@ public class TCPClientThread extends HandlerThread {
 
     public boolean insertValuesToServer(Message msg){
         Bundle bundle=msg.getData();
-        ArrayList<String> keys=bundle.getStringArrayList(MessageType.BUNDLE_KEY_KEYS);
-        ArrayList<String> values=bundle.getStringArrayList(MessageType.BUNDLE_KEY_VALUES);
+
+        Bundle values=bundle.getBundle(MessageType.BUNDLE_KEY_VALUES);
         String tableName=bundle.getString(MessageType.BUNDLE_KEY_TABLENAME);
 
         NetMessage sendMessage=new NetMessage();
@@ -162,8 +162,8 @@ public class TCPClientThread extends HandlerThread {
         JSONObject json=new JSONObject();
 
         try{
-            for(int i=0;i<keys.size();++i){
-                json.put(keys.get(i),values.get(i));
+            for(String key:values.keySet()){
+                json.put(key,values.get(key));
             }
         }catch (JSONException e){
             e.printStackTrace();
@@ -174,7 +174,7 @@ public class TCPClientThread extends HandlerThread {
         Log.v("Note","Send Message:"+sendMessage);
 
         String rcvMessageStr= receiveNetMessage();
-        Log.v("Note","Recive Message:"+rcvMessageStr);
+        Log.v("Note","Receive Message:"+rcvMessageStr);
 
         NetMessage rcvMessage=new NetMessage(rcvMessageStr);
         if(!rcvMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_INSERT)){
@@ -183,6 +183,47 @@ public class TCPClientThread extends HandlerThread {
         }
         String status=rcvMessage.getString(NetMessage.STATUS);
         //Log.v("Note",status);
+        return status.equals(NetMessage.STATUS_SUCCESS);
+    }
+
+    public boolean updateValuesToServer(Message msg){
+        NetMessage sndMessage=new NetMessage();
+        sndMessage.put(NetMessage.MESSAGE_TYPE,NetMessage.MESSAGE_TYPE_UPDATE);
+
+        Bundle bundle=msg.getData();
+        Bundle valueBundle=bundle.getBundle(MessageType.BUNDLE_KEY_VALUES);
+        Bundle selectionBundle=bundle.getBundle(MessageType.BUNDLE_KEY_SELECTIONS);
+
+        sndMessage.put(NetMessage.TABLE_NAME,bundle.getString(MessageType.BUNDLE_KEY_TABLENAME));
+
+        JSONObject valueJson=new JSONObject();
+        JSONObject selectionJson=new JSONObject();
+        try{
+            for(String key:valueBundle.keySet()){
+                valueJson.put(key,valueBundle.getString(key));
+            }
+            for(String key:selectionBundle.keySet()){
+                selectionJson.put(key,selectionBundle.getString(key));
+            }
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+
+        sndMessage.put(NetMessage.VALUES,valueJson);
+        sndMessage.put(NetMessage.SELECTIONS,selectionJson);
+
+        sendNetMessageToServer(sndMessage);
+        Log.v("Note","Send Message:"+sndMessage);
+
+        String rcvMessageStr= receiveNetMessage();
+        Log.v("Note","Receive Message:"+rcvMessageStr);
+
+        NetMessage rcvMessage=new NetMessage(rcvMessageStr);
+        if(!rcvMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_UPDATE)){
+            Log.v("Note","Too Busy For Request");
+            return false;
+        }
+        String status=rcvMessage.getString(NetMessage.STATUS);
         return status.equals(NetMessage.STATUS_SUCCESS);
     }
 }

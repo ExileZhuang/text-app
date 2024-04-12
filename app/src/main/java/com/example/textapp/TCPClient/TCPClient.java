@@ -63,15 +63,19 @@ public class TCPClient {
                         queryQueue.add(message1);
                         break;
                     case MessageType.WHAT_INSERT:
-                        int cnt = 0;
-                        while ((!thread.insertValuesToServer(msg)) && cnt < 5) {
-                            cnt++;
+                        int cnt1 = 0;
+                        while ((!thread.insertValuesToServer(msg)) && cnt1 < 5) {
+                            ++cnt1;
                             //发送失败最多五次则跳出;
                         }
                         break;
-                    case MessageType.WHAT_DELETE:
-                        break;
                     case MessageType.WHAT_UPDATE:
+                        int cnt2=0;
+                        while((!thread.updateValuesToServer(msg))&&cnt2<5){
+                            ++cnt2;
+                        }
+                        break;
+                    case MessageType.WHAT_DELETE:
                         break;
                     default:
                         break;
@@ -81,7 +85,7 @@ public class TCPClient {
         thread.setReceiveHandler(sendHandler);
 
         //初始化各个queue;
-        queryQueue=new LinkedList<Message>();
+        queryQueue=new LinkedList<>();
     }
 
 
@@ -97,7 +101,7 @@ public class TCPClient {
         ArrayList<String> queryColumns=new ArrayList<>();
         for(int i=0;i<count;++i){
             Map<String,String> map=lmap.get(i);
-            ArrayList<String> result=new ArrayList<String>();
+            ArrayList<String> result=new ArrayList<>();
             for(String key:map.keySet()){
                 if(i==0) {
                     queryColumns.add(key);
@@ -107,7 +111,7 @@ public class TCPClient {
             if(i==0){
                 bundle.putStringArrayList(MessageType.BUNDLE_KEY_QUERYCOLUMNS,queryColumns);
             }
-            bundle.putStringArrayList(MessageType.BUNDLE_KEY_RESULTINDEX+String.valueOf(i),result);
+            bundle.putStringArrayList(MessageType.BUNDLE_KEY_RESULTINDEX+i,result);
         }
         return bundle;
     }
@@ -115,13 +119,13 @@ public class TCPClient {
 
     //将bundle解析成为List<map<String,String>>即查询结果;
     public List<Map<String,String>> BundleToListMap(Bundle bundle){
-        List<Map<String,String>> results=new ArrayList<Map<String,String>>();
+        List<Map<String,String>> results=new ArrayList<>();
         int count=bundle.getInt(MessageType.BUNDLE_KEY_RESULTSCOUNT);
         ArrayList<String> columns=bundle.getStringArrayList(MessageType.BUNDLE_KEY_QUERYCOLUMNS);
         for(int i=0;i<count;++i){
             String index=MessageType.BUNDLE_KEY_RESULTINDEX+ i;
             ArrayList<String> values=bundle.getStringArrayList(index);
-            Map<String,String> map=new HashMap<String,String>();
+            Map<String,String> map=new HashMap<>();
             for(int j=0;j<values.size();++j){
                 map.put(columns.get(j),values.get(j));
             }
@@ -138,22 +142,20 @@ public class TCPClient {
         Bundle bundle=new Bundle();
         bundle.putString(MessageType.BUNDLE_KEY_TABLENAME, TableName);
         bundle.putStringArrayList(MessageType.BUNDLE_KEY_QUERYCOLUMNS,queryColumns);
-        ArrayList<String> keys=new ArrayList<String>();
-        ArrayList<String> values=new ArrayList<String>();
+
+        Bundle selectionBundle=new Bundle();
         for(String key:selections.keySet()){
-            keys.add(key);
-            values.add(selections.get(key));
+            selectionBundle.putString(key,selections.get(key));
         }
-        bundle.putStringArrayList(MessageType.BUNDLE_KEY_SELECTIONKEYS, keys);
-        bundle.putStringArrayList(MessageType.BUNDLE_KEY_SELECTIONSVALUES,values);
+
+        bundle.putBundle(MessageType.BUNDLE_KEY_SELECTIONS,selectionBundle);
+
         msg.setData(bundle);
 
         sendHandler.sendMessage(msg);
-        //Log.v("Note","Waiting For Result");
         while(queryQueue.isEmpty()){
             //当queryQueue为空说明尚未开始,因此阻塞等待;
         }
-        //Log.v("Note","Get Result And Continue");
         Message rcvMessage=queryQueue.poll();
 
         //将查询结果以Bundle形式返回;
@@ -169,18 +171,41 @@ public class TCPClient {
         Bundle bundle=new Bundle();
         bundle.putString(MessageType.BUNDLE_KEY_TABLENAME,tableName);
 
-        //将values转变为bundle形式并发送;
-        ArrayList<String> keys=new ArrayList<String>();
-        ArrayList<String> values=new ArrayList<String>();
+        Bundle valueBundle=new Bundle();
         for(String key:Values.keySet()){
-            keys.add(key);
-            values.add(Values.get(key));
+            valueBundle.putString(key,Values.get(key));
         }
-        bundle.putStringArrayList(MessageType.BUNDLE_KEY_KEYS,keys);
-        bundle.putStringArrayList(MessageType.BUNDLE_KEY_VALUES,values);
+        bundle.putBundle(MessageType.BUNDLE_KEY_VALUES,valueBundle);
+
+
         sndMessage.setData(bundle);
 
         sendHandler.sendMessage(sndMessage);
         //非堵塞运行,发送完插入消息后即不管子线程处理，继续在主线程运行;
+    }
+
+    //bundle带有values和selections的bundle传递给子线程(new);
+    public void updateValuesToServerTable(String tableName,Map<String,String> values,Map<String,String> selections){
+        Message sndMessage=new Message();
+        sndMessage.what=MessageType.WHAT_UPDATE;
+        Bundle bundle=new Bundle();
+        bundle.putString(MessageType.BUNDLE_KEY_TABLENAME,tableName);
+
+        Bundle valueBundle=new Bundle();
+        for(String key:values.keySet()){
+            valueBundle.putString(key,values.get(key));
+        }
+
+        Bundle selectionBundle=new Bundle();
+        for(String key:selections.keySet()){
+            selectionBundle.putString(key,selections.get(key));
+        }
+
+        bundle.putBundle(MessageType.BUNDLE_KEY_VALUES,valueBundle);
+        bundle.putBundle(MessageType.BUNDLE_KEY_SELECTIONS,selectionBundle);
+
+        sndMessage.setData(bundle);
+
+        sendHandler.sendMessage(sndMessage);
     }
 }

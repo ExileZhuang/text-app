@@ -59,12 +59,13 @@ class SQLHelper{
     public List<Map<String,String>> query(String tableName, List<String> queryColumns, Map<String, String> selections) {
       String sql="select ";
       for(int i=0;i<queryColumns.size();++i){
-        sql=sql+queryColumns.get(i)+" ";
+        sql=sql+queryColumns.get(i)+",";
       }
-      sql=sql+"from "+tableName+" where ";
+      sql=sql.substring(0,sql.length()-1);
+      sql=sql+" from "+tableName+" where ";
       for(String key:selections.keySet()){
         String value=selections.get(key);
-        sql=sql+key+"="+value+" and ";
+        sql=sql+key+"='"+value+"' and ";
       }
       sql=sql.substring(0,sql.length()-5);
       List<Map<String,String>> list=new ArrayList<Map<String,String>>();

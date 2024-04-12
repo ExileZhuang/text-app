@@ -46,7 +46,7 @@ public class NetMessage {
     //json格式:{AnsMessageType:2,Status:200/500};
 
 
-    public static final String ANSMESSAGEE_TYPE_UPDATE="3";
+    public static final String ANSMESSAGE_TYPE_UPDATE ="3";
 
     public static final String MESSAGE_TYPE_UPDATE="3";
     //更新则MessageType为3;

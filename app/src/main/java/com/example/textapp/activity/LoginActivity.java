@@ -183,7 +183,6 @@ public class LoginActivity extends AppCompatActivity {
                             newInfo.name=userinfoMap.get(User_Info.NAME);
                             if(info.user_id==null){
                                 //本地未有该账号信息时:从服务器获取全部信息并插入到本地数据库;
-                                //从服务器获取所有信息;
                                 mDBHelper.insertUserInfoByUserInfo(newInfo);
                             }
                             else{

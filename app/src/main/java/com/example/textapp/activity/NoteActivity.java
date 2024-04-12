@@ -28,8 +28,18 @@ import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.Note;
 import com.example.textapp.entity.User_Info;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public class NoteActivity extends AppCompatActivity {
 
@@ -107,12 +117,81 @@ public class NoteActivity extends AppCompatActivity {
         }
 
         //从库中找到该用户最近登录的五次结果;
-        //TODO
-        //本地数据需要与服务器数据进行合并并选取最新的五次;
+        ArrayList<String> queryColumns=new ArrayList<>();
+        queryColumns.add(Login_Info.DEVICE);
+        Map<String,String> selection=new HashMap<>();
+        selection.put(User_Info.USER_ID,DEFAULT_USER_ID);
+        List<Map<String,String>> queryResults=mClient.sendQueryColumnsBySelectionsToTable(Login_Info.TABLE_LOGIN,queryColumns,selection);
+
+        //从本地数据库中查找最近登录的五次结果;
         List<Login_Info> listLoginInfo=mDBHelper.queryLoginInfoByUserId(DEFAULT_USER_ID);
         if(listLoginInfo.size()>5){
             listLoginInfo=listLoginInfo.subList(0,5);
         }
+
+        //找出服务器数据库中与本地数据库中设备不同的部分，然后将设备不同的部分分批次多次读取;
+        Set<String> set1=new HashSet<>(),set2=new HashSet<>();
+        for(Map<String,String> m:queryResults){
+            set1.add(m.get(Login_Info.DEVICE));
+        }
+        for(Login_Info i:listLoginInfo){
+            set2.add(i.device);
+        }
+
+        queryColumns.add(Login_Info.TIME);
+        //当服务器与本地的设备型号有不同时;
+        if(!set1.equals(set2)){
+            for(String element:set1){
+                if(set2.contains(element)){
+                    set1.remove(element);
+                }
+            }
+            ArrayList<String> recDevice = new ArrayList<>(set1);
+            for(String device:recDevice){
+                Map<String,String> tempSelection=selection;
+                tempSelection.put(Login_Info.DEVICE,device);
+                List<Map<String,String>> singleResults=mClient.sendQueryColumnsBySelectionsToTable(Login_Info.TABLE_LOGIN,
+                        queryColumns,tempSelection);
+                for(Map<String,String> m:singleResults){
+                    Login_Info newInfo=new Login_Info(m);
+                    listLoginInfo.add(newInfo);
+                }
+            }
+
+            //对于全部设备的所有登录时间，进行筛选排序在最新五次登录;
+            Collections.sort(listLoginInfo, new Comparator<Login_Info>() {
+                @Override
+                public int compare(Login_Info o1, Login_Info o2) {
+                    SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+                    Date date1=null,date2=null;
+                    try {
+                        date1=formatter.parse(o1.time);
+                        date2=formatter.parse(o2.time);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    if(date1!=null&&date2!=null){
+                        if(date1.equals(date2)){
+                            return 0;
+                        }
+                        else if(date1.after(date2)){
+                            return 1;
+                        }
+                        else{
+                            return -1;
+                        }
+                    }
+                    else{
+                        return 0;
+                    }
+                }
+            });
+
+            listLoginInfo=listLoginInfo.subList(0,5);
+        }
+
+
+        //本地数据需要与服务器数据进行合并并选取最新的五次;
         List<String> listData=new ArrayList<>();
         for(Login_Info lInfo:listLoginInfo){
             listData.add(lInfo.time+" "+lInfo.device);
@@ -167,8 +246,15 @@ public class NoteActivity extends AppCompatActivity {
                     //本地数据库更新;
                     mDBHelper.updateUserInfoByUserId(DEFAULT_USER_ID,values);
 
-                    //TODO;
                     //服务器更新相关数据;
+                    Map<String,String> valuesMap=new HashMap<>();
+                    for(String key:values.keySet()){
+                        valuesMap.put(key,values.getAsString(key));
+                    }
+                    Map<String,String> selection=new HashMap<>();
+                    selection.put(User_Info.USER_ID,DEFAULT_USER_ID);
+
+                    mClient.updateValuesToServerTable(User_Info.TABLE_USER,valuesMap,selection);
 
                     Toast.makeText(getApplicationContext(),"信息保存成功",Toast.LENGTH_LONG).show();
 
