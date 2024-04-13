@@ -122,7 +122,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
             mWDB.beginTransaction();
             long res=mWDB.insert(Table_name,null,values);
             if(res==-1){
-                Log.v("Note","Insert Values To "+Table_name+" Falied");
+                Log.v("Note","Insert Values To "+Table_name+" Failed");
             }
             mWDB.setTransactionSuccessful();
         }catch (Exception e){
@@ -130,6 +130,7 @@ public class NotesDBHelper extends SQLiteOpenHelper {
         }finally {
             mWDB.endTransaction();
         }
+        Log.v("Note","Insert Values To "+Table_name+" Success");
     }
 
     //往表login_info中插入根据userid的登录信息;

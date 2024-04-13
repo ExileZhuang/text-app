@@ -62,6 +62,33 @@ public class NetMessage {
     //          TableName:table_name,
     //          Selections:{key1:value1,key2:value2,...}}
 
+
+    public static final String ANSMESSAGE_TYPE_GETQRCODEID ="5";
+    //返回一个带有QRCodeId的NetMessage,此时AnsMessageType为5:
+    //json格式:{MessageType:"5",
+    //QRCodeId:"xxx"};
+
+    public static final String QRCODEID="QRCodeId";
+    public static final String MESSAGE_TYPE_GETQRCODEID="5";
+    //请求获取一个QRCodeID为5;
+    //json格式为{MessageType:"5"}
+
+    public static final String ANSMESSAGE_TYPE_ACKQRCODEID="6";
+
+    public static final String USERID="UserId";
+
+    public static final String MESSAGE_TYPE_ACKQRCODEID="6";
+    //发送一个确认qrcodeid的信息:6
+    //json格式:{MessageType:"6";
+            //  QRCodeId:"",
+            //  UserId:""}
+
+    public static final String ANSMESSAGE_TYPE_AUTHORIZATION ="7";
+    //发送一个给某个设备授权的通知性Message,设定type为7;
+    //无回复信息;
+    //json格式: {MessageType:"7",
+    //  UserId:""}
+
     private JSONObject json;
 
     public NetMessage(){

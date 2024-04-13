@@ -116,12 +116,12 @@ public class NoteActivity extends AppCompatActivity {
             rb_female.setChecked(true);
         }
 
-        //从库中找到该用户最近登录的五次结果;
+        //从库中找到该用户最近登录的五次设备;
         ArrayList<String> queryColumns=new ArrayList<>();
         queryColumns.add(Login_Info.DEVICE);
         Map<String,String> selection=new HashMap<>();
         selection.put(User_Info.USER_ID,DEFAULT_USER_ID);
-        List<Map<String,String>> queryResults=mClient.sendQueryColumnsBySelectionsToTable(Login_Info.TABLE_LOGIN,queryColumns,selection);
+        List<Map<String,String>> queryResults=mClient.sendQueryColumnsBySelectionsToServerTable(Login_Info.TABLE_LOGIN,queryColumns,selection);
 
         //从本地数据库中查找最近登录的五次结果;
         List<Login_Info> listLoginInfo=mDBHelper.queryLoginInfoByUserId(DEFAULT_USER_ID);
@@ -150,7 +150,7 @@ public class NoteActivity extends AppCompatActivity {
             for(String device:recDevice){
                 Map<String,String> tempSelection=selection;
                 tempSelection.put(Login_Info.DEVICE,device);
-                List<Map<String,String>> singleResults=mClient.sendQueryColumnsBySelectionsToTable(Login_Info.TABLE_LOGIN,
+                List<Map<String,String>> singleResults=mClient.sendQueryColumnsBySelectionsToServerTable(Login_Info.TABLE_LOGIN,
                         queryColumns,tempSelection);
                 for(Map<String,String> m:singleResults){
                     Login_Info newInfo=new Login_Info(m);

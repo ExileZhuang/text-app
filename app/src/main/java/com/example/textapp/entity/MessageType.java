@@ -11,16 +11,24 @@ public class MessageType {
 
     public static final int WHAT_DELETE=4;
 
+    public static  final int WHAT_QRCODEID_GET =5;
+
+    public static final int WHAT_QRCODEID_ACKNOWLEDGE =6;
+
     public static final String BUNDLE_KEY_TABLENAME="TableName";
 
     public static final String BUNDLE_KEY_QUERYCOLUMNS="QueryColumns";
 
     public static final String BUNDLE_KEY_SELECTIONS="Selections";
 
-
     public static final String BUNDLE_KEY_RESULTSCOUNT="ResultsCount";
 
     public static final String BUNDLE_KEY_RESULTINDEX="Result";
 
     public static final String BUNDLE_KEY_VALUES="Values";
+
+    public static final String BUNDLE_KEY_QRCODEID="QRCodeId";
+
+    public static final String BUNDLE_KEY_STATUS="Status";
+
 }

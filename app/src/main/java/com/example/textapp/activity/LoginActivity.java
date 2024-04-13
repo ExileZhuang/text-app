@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -85,12 +86,18 @@ public class LoginActivity extends AppCompatActivity {
 
     //展示二维码页面;
     private void showLoginQRcodeLayout() {
+        //加载二维码登录界面;
         View qrcodeView= LayoutInflater.from(this).inflate(R.layout.layout_login_qrcode,null);
         LinearLayout layout=findViewById(R.id.LinearLayout_login_show);
         LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
         layout.removeAllViews();
         layout.addView(qrcodeView,params);
+
+        String qrcodeId=mClient.getQRCodeIdMessageFromServer();
+
+        //实现二维码生成;
+        //TODO;
     }
 
     //展示账号密码登录页面;
@@ -158,7 +165,7 @@ public class LoginActivity extends AppCompatActivity {
                     selections.put(User_Info.USER_ID,userId);
                     ArrayList<String> queryColumn=new ArrayList<>();
                     queryColumn.add(User_Info.PASSWORD);
-                    List<Map<String,String>> results=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selections);
+                    List<Map<String,String>> results=mClient.sendQueryColumnsBySelectionsToServerTable(User_Info.TABLE_USER,queryColumn, selections);
                     if(!results.isEmpty()){
                         String passwordFromServer=results.get(0).get(User_Info.PASSWORD);
                         if(passwordFromServer.equals(password)){
@@ -173,7 +180,7 @@ public class LoginActivity extends AppCompatActivity {
                             queryColumns.add(User_Info.GENDER);
                             Map<String,String> selection=new HashMap<>();
                             selection.put(User_Info.USER_ID,userId);
-                            List<Map<String,String>> queryResults=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumns,selection);
+                            List<Map<String,String>> queryResults=mClient.sendQueryColumnsBySelectionsToServerTable(User_Info.TABLE_USER,queryColumns,selection);
                             Map<String,String> userinfoMap=queryResults.get(0);
                             User_Info newInfo=new User_Info();
                             newInfo.user_id=userId;
@@ -299,7 +306,7 @@ public class LoginActivity extends AppCompatActivity {
                     queryColumn.add(User_Info.USER_ID);
                     Map<String,String> selection=new HashMap<>();
                     selection.put(User_Info.USER_ID,info.user_id);
-                    List<Map<String,String>> result=mClient.sendQueryColumnsBySelectionsToTable(User_Info.TABLE_USER,queryColumn, selection);
+                    List<Map<String,String>> result=mClient.sendQueryColumnsBySelectionsToServerTable(User_Info.TABLE_USER,queryColumn, selection);
                     if(!result.isEmpty()){
                         //服务器数据库中已经存在对应账号;
                         Toast.makeText(getApplicationContext(),"账号已存在",Toast.LENGTH_LONG).show();

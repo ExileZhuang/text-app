@@ -57,15 +57,20 @@ class SQLHelper{
     }
 
     public List<Map<String,String>> query(String tableName, List<String> queryColumns, Map<String, String> selections) {
-      String sql="select ";
+      String sql="SELECT ";
       for(int i=0;i<queryColumns.size();++i){
         sql=sql+queryColumns.get(i)+",";
       }
       sql=sql.substring(0,sql.length()-1);
-      sql=sql+" from "+tableName+" where ";
+      sql=sql+" FROM "+tableName+" WHERE ";
       for(String key:selections.keySet()){
         String value=selections.get(key);
-        sql=sql+key+"='"+value+"' and ";
+        if(key.equals(USER_AGE)){
+            sql=sql+key+"="+value+" AND ";
+        }
+        else{
+            sql=sql+key+"='"+value+"' AND ";
+        }
       }
       sql=sql.substring(0,sql.length()-5);
       List<Map<String,String>> list=new ArrayList<Map<String,String>>();
@@ -88,15 +93,19 @@ class SQLHelper{
     }
 
     public boolean insert(String TableName,Map<String,String> map){
-        String sql="insert into "+TableName+"(";
-        List<String> values=new ArrayList<String>();
+        String sql="INSERT INTO "+TableName+"(";
         for(String key:map.keySet()){
             sql=sql+key+",";
-            values.add(map.get(key));
         }
-        sql=sql.substring(0,sql.length()-1)+") values(";
-        for(String value:values){
-            sql=sql+value+",";
+        sql=sql.substring(0,sql.length()-1)+") VALUES (";
+        for(String key:map.keySet()){
+            String value=map.get(key);
+            if(key.equals(USER_AGE)){
+                sql=sql+value+",";
+            }
+            else{
+                sql=sql+"'"+value+"',";
+            }
         }
         sql=sql.substring(0,sql.length()-1)+")";
         int result=0;
@@ -109,13 +118,23 @@ class SQLHelper{
     }
 
     public boolean update(String TableName,Map<String,String> data,Map<String,String> selections){
-        String sql="update "+TableName+" SET ";
+        String sql="UPDATE "+TableName+" SET ";
         for(String key:data.keySet()){
-            sql=sql+key+"="+data.get(key)+",";
+            if(key.equals(USER_AGE)){
+                sql=sql+key+"="+data.get(key)+",";
+            }
+            else{
+                sql=sql+key+"='"+data.get(key)+"',";
+            }
         }
         sql=sql.substring(0,sql.length()-1)+" WHERE ";
         for(String key:selections.keySet()){
-            sql=sql+key+"="+selections.get(key)+" AND ";
+            if(key.equals(USER_AGE)){
+                sql=sql+key+"="+selections.get(key)+" AND ";
+            }
+            else{
+                sql=sql+key+"='"+selections.get(key)+"' AND ";
+            }
         }
         sql=sql.substring(0, sql.length()-5);
         int result=0;
@@ -130,7 +149,13 @@ class SQLHelper{
     public boolean delete(String TableName,Map<String,String> selections){
         String sql="DELETE FROM "+TableName+" WHERE ";
         for(String key:selections.keySet()){
-            sql=sql+key+"="+selections.get(key)+" AND ";
+            //sql=sql+key+"="+selections.get(key)+" AND ";
+            if(key.equals(USER_AGE)){
+                sql=sql+key+"="+selections.get(key)+" AND ";
+            }
+            else{
+                sql=sql+key+"='"+selections.get(key)+"' AND ";
+            }
         }
         sql=sql.substring(0,sql.length()-5);
         int result=0;

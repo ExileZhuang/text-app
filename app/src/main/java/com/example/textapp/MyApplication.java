@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 import com.example.textapp.TCPClient.TCPClient;
+import com.example.textapp.database.NotesDBHelper;
 
 public class MyApplication extends Application {
 
@@ -23,6 +24,10 @@ public class MyApplication extends Application {
     }
 
     public void onTerminate(){
+        mClient.closeClient();
+        NotesDBHelper mDBHelper= NotesDBHelper.getInstance(this);
+        mDBHelper.closeLink();
+        mDBHelper.close();
         super.onTerminate();
     }
 

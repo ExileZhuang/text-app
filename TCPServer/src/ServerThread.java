@@ -10,10 +10,12 @@ public class ServerThread implements Runnable{
     private Socket socket=null;
     private BufferedReader input=null;
     private SQLHelper mDBHelper;
+    private TCPServer mServer;
 
-    public ServerThread(Socket _socket) throws IOException{
+    public ServerThread(Socket _socket,TCPServer _TcpServer) throws IOException{
         mDBHelper=new SQLHelper();
         socket=_socket;
+        mServer=_TcpServer;
         input=new BufferedReader(new InputStreamReader(socket.getInputStream(),"utf-8"));
     }
 
@@ -58,8 +60,17 @@ public class ServerThread implements Runnable{
                     case NetMessage.MESSAGE_TYPE_UPDATE:
                         updateMessageProcess(message);
                         break;
+
+                    case NetMessage.MESSAGE_TYPE_GETQRCODEID:
+                        GetQRCodeIdMessageProcess();
+                        break;
                     
-                    default:break;
+                    case NetMessage.MESSAGE_TYPE_ACKQRCODEID:
+                        ackQRCodeIdMessageProcess(message);
+                        break;
+
+                    default:
+                        break;
                 }
             }
             input.close();
@@ -154,7 +165,7 @@ public class ServerThread implements Runnable{
         }
     }
 
-    private void deleteMessageProcess(NetMessage message) {
+    public void deleteMessageProcess(NetMessage message) {
         String tableName=message.getString(NetMessage.TABLE_NAME);
         Map<String,String> selections=message.getMap(NetMessage.SELECTIONS);
 
@@ -169,6 +180,58 @@ public class ServerThread implements Runnable{
                 ansMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
             }
             sendNetMessage(ansMessage);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void GetQRCodeIdMessageProcess(){
+        String qrCodeId=mServer.getQrCodeId();
+
+        //将qrcodeId及对应线程thread放入Server端的哈希表中;
+        mServer.pushServerThreadIntoMap(qrCodeId, this);
+
+        NetMessage ansMessage=new NetMessage();
+        ansMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_GETQRCODEID);
+        ansMessage.put(NetMessage.QRCODEID,qrCodeId);
+        try{
+            sendNetMessage(ansMessage);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    //对上传上来的QRCodeId进行确认现在是否存在仍在进行通信的线程;
+    //有则让该线程对对应客户端发送通知信息进行登录;
+    //同时对本线程的远程客户端做出响应：表示登录成功与否;
+    public void ackQRCodeIdMessageProcess(NetMessage msg){
+        String qrcodeId=msg.getString(NetMessage.QRCODEID);
+        String userId=msg.getString(NetMessage.USERID);
+        boolean flag=mServer.ackQRCodeId(qrcodeId,userId);
+
+        //返回给扫码登录设备表示是否可以对另一台机器扫码登录成功;
+        NetMessage rpdMessage=new NetMessage();
+        rpdMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_ACKQRCODEID);
+        if(flag){
+            rpdMessage.put(NetMessage.STATUS,NetMessage.STATUS_SUCCESS);
+        }
+        else{
+            rpdMessage.put(NetMessage.STATUS,NetMessage.STATUS_FAIL);
+        }
+
+        try{
+            sendNetMessage(rpdMessage);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void sendAuthorizationMessage(String UserId){
+        NetMessage sndMessage=new NetMessage();
+        sndMessage.put(NetMessage.ANSMESSAGE_TYPE,NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION);
+        sndMessage.put(NetMessage.USERID,UserId);
+        try{
+            sendNetMessage(sndMessage);
         }catch(Exception e){
             e.printStackTrace();
         }
