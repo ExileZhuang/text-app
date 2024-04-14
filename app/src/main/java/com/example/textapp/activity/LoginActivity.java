@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -95,7 +97,18 @@ public class LoginActivity extends AppCompatActivity {
 
         //向服务器申请一个QRCodeId;
         String qrcodeId=mClient.getQRCodeIdMessageFromServer();
+        try{
+//            Bitmap qrCodeBitmap=EncodingHandler.createQRCode(qrcodeId,300);
+//            ImageView img_qrcode=findViewById(R.id.imageView_qrcode_show);
+//            img_qrcode.setImageBitmap(qrCodeBitmap);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
+        //申请完后向子线程发送消息等待有无授权消息;
+        String UserId=mClient.waitQRCodeIdAuthorizationLoginMessage();
+
+        //Bitmap qrCodeBitmap = EncodingHandler.createQRCode(qrcodeId, 350);
         //实现二维码生成;
         //TODO;
     }
