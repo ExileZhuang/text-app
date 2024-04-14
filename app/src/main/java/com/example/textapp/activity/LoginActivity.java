@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -79,13 +78,13 @@ public class LoginActivity extends AppCompatActivity {
         findViewById(R.id.button_login_qrcode).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showLoginQRcodeLayout();
+                showLoginQRCodeLayout();
             }
         });
     }
 
     //展示二维码页面;
-    private void showLoginQRcodeLayout() {
+    private void showLoginQRCodeLayout() {
         //加载二维码登录界面;
         View qrcodeView= LayoutInflater.from(this).inflate(R.layout.layout_login_qrcode,null);
         LinearLayout layout=findViewById(R.id.LinearLayout_login_show);
@@ -94,6 +93,7 @@ public class LoginActivity extends AppCompatActivity {
         layout.removeAllViews();
         layout.addView(qrcodeView,params);
 
+        //向服务器申请一个QRCodeId;
         String qrcodeId=mClient.getQRCodeIdMessageFromServer();
 
         //实现二维码生成;

@@ -202,7 +202,7 @@ public class ServerThread implements Runnable{
     }
 
     //对上传上来的QRCodeId进行确认现在是否存在仍在进行通信的线程;
-    //有则让该线程对对应客户端发送通知信息进行登录;
+    //有则让该线程对对应客户端发送信息进行登录;
     //同时对本线程的远程客户端做出响应：表示登录成功与否;
     public void ackQRCodeIdMessageProcess(NetMessage msg){
         String qrcodeId=msg.getString(NetMessage.QRCODEID);

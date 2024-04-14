@@ -28,24 +28,19 @@ public class TCPClientThread extends HandlerThread {
 
     public static final int SERVER_PORT=8080;
 
-    private BufferedReader input;
+    private BufferedReader input=null;
 
-    private Socket socket;
+    private Socket socket=null;
 
     //为了使用qrcode对客户端与服务器之间的收发机制进行更改;
-    //对于query,update,insert,delete等操作称为OrderedNetMessage;
-    //对于该类信息在发送后进行堵塞等待回传消息(之前也是)并放入queue中，发送后等待queue中出现对应消息并获取;
-    //对于通知类消息(服务器提出的发送消息,例如QRCode登录时服务器比对成功后发送过来的用户信息?)进行专门处理;
+    //信息在发送后进行堵塞等待回传消息(之前也是)并放入queue中，发送后等待queue中出现对应消息并获取;
     private final Queue<NetMessage> OrderedNetMessageQueue=new LinkedList<>();
 
-    private Handler receiveHandler;
+    private Handler receiveHandler=null;
     //接受主线程消息的handler;
 
     public TCPClientThread(String ThreadName){
         super(ThreadName);
-        socket=null;
-        input=null;
-        receiveHandler=null;
     }
 
     //终止线程中所有任务;
@@ -60,6 +55,7 @@ public class TCPClientThread extends HandlerThread {
             e.printStackTrace();
         }
     }
+
 
     public void setReceiveHandler(Handler handler){
         receiveHandler=handler;
@@ -80,6 +76,8 @@ public class TCPClientThread extends HandlerThread {
         Log.v("Note","Send Message:"+message);
     }
 
+    //NO USE;
+    //暂时废止使用;
     //从服务器接收一条信息;
     public String receiveNetMessage(){
         String msg=null;
@@ -111,38 +109,46 @@ public class TCPClientThread extends HandlerThread {
 
     @Override
     public void run(){
-        try{
-            socket=new Socket(SERVER_IP,SERVER_PORT);
-            //Log.v("Note","Connect Status:"+String.valueOf(socket.isConnected()));
-            input=new BufferedReader(new InputStreamReader(socket.getInputStream(),"utf-8"));
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        new Thread(new Runnable() {
 
-        String msgStr=null;
-        try{
-            while((msgStr= input.readLine())!=null){
-                Log.v("Note","Receive NetMessage:"+msgStr);
-                NetMessage rcvMessage=new NetMessage(msgStr);
-                String msgType=rcvMessage.getAnsMessageType();
-                switch (msgType){
-                    case NetMessage.ANSMESSAGE_TYPE_QUERY:
-                    case NetMessage.ANSMESSAGE_TYPE_INSERT:
-                    case NetMessage.ANSMESSAGE_TYPE_UPDATE:
-                    case NetMessage.ANSMESSAGE_TYPE_DELETE:
-                    case NetMessage.ANSMESSAGE_TYPE_GETQRCODEID:
-                    case NetMessage.ANSMESSAGE_TYPE_ACKQRCODEID:
+            //另开子线程与服务器进行连接,并监听服务器发送的消息;
+            @Override
+            public void run() {
+                try{
+                    socket=new Socket(SERVER_IP,SERVER_PORT);
+                    //Log.v("Note","Connect Status:"+String.valueOf(socket.isConnected()));
+                    input=new BufferedReader(new InputStreamReader(socket.getInputStream(),"utf-8"));
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+                String msgStr=null;
+                try{
+                    while((msgStr= input.readLine())!=null){
+                        Log.v("Note","Receive NetMessage:"+msgStr);
+                        NetMessage rcvMessage=new NetMessage(msgStr);
                         OrderedNetMessageQueue.offer(rcvMessage);
-                        break;
-                    case NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION:
-                        //接收到通知性信息，根据userId授权登录;
-                        authorizeLoginByQRCode(rcvMessage);
-                        break;
+                        //由于都是堵塞式等待服务器返回的消息,所以都可以直接放入OrderedNetMessageQueue;
+                        //如果后续遇到通知性服务器消息,用下面这种对不同类别的消息进行分类处理;
+//                        String msgType=rcvMessage.getAnsMessageType();
+//                        switch (msgType){
+//                            case NetMessage.ANSMESSAGE_TYPE_QUERY:
+//                            case NetMessage.ANSMESSAGE_TYPE_INSERT:
+//                            case NetMessage.ANSMESSAGE_TYPE_UPDATE:
+//                            case NetMessage.ANSMESSAGE_TYPE_DELETE:
+//                            case NetMessage.ANSMESSAGE_TYPE_GETQRCODEID:
+//                            case NetMessage.ANSMESSAGE_TYPE_ACKQRCODEID:
+//                                OrderedNetMessageQueue.offer(rcvMessage);
+//                                break;
+//                            case NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION:
+//                                break;
+//                        }
+                    }
+                }catch (IOException e){
+                    e.printStackTrace();
                 }
             }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        }).start();
         super.run();
     }
 
@@ -313,12 +319,21 @@ public class TCPClientThread extends HandlerThread {
         NetMessage rcvMessage=OrderedNetMessageQueue.poll();
         if(rcvMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_ACKQRCODEID)){
             Log.v("Note","Too Busy For Request");
+            return false;
         }
         return rcvMessage.getString(NetMessage.STATUS).equals(NetMessage.STATUS_SUCCESS);
     }
 
-    //通过二维码扫码登录后服务器发送的通知性授权消息触发;
+    //通过二维码扫码登录后服务器发送的授权消息触发;
     //传入user_id返回到主线程并实现登录;
-    public void authorizeLoginByQRCode(NetMessage msg){//
+    public String waitQRCodeIdAuthorizationMessage(){
+        while(OrderedNetMessageQueue.isEmpty()){
+            //堵塞等待服务器发送Authorize消息;
+        }
+        NetMessage rcvMessage=OrderedNetMessageQueue.poll();
+        if(rcvMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION)){
+            Log.v("Note","Too Busy For Request");
+        }
+        return rcvMessage.getString(NetMessage.USERID);
     }
 }

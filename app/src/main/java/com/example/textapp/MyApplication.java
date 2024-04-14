@@ -35,6 +35,7 @@ public class MyApplication extends Application {
         return mClient;
     }
 
+    @Override
     public void onConfigurationChanged(Configuration newConfig){
         super.onConfigurationChanged(newConfig);
     }

@@ -15,6 +15,10 @@ public class MessageType {
 
     public static final int WHAT_QRCODEID_ACKNOWLEDGE =6;
 
+    public static final int WHAT_QRCODEID_AUTHORIZE=7;
+
+    public static final String BUNDLE_KEY_USERID="user_id";
+
     public static final String BUNDLE_KEY_TABLENAME="TableName";
 
     public static final String BUNDLE_KEY_QUERYCOLUMNS="QueryColumns";

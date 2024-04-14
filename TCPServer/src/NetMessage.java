@@ -81,7 +81,7 @@ public class NetMessage {
             //  UserId:""}
 
     public static final String ANSMESSAGE_TYPE_AUTHORIZATION="7";
-    //发送一个给某个设备授权的通知性Message,设定type为7;
+    //发送一个给某个设备授权的Message,设定type为7;
     //无回复信息;
     //json格式: {MessageType:"7",
                 //  UserId:""}
