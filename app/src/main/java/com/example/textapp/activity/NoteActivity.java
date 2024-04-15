@@ -65,6 +65,7 @@ public class NoteActivity extends AppCompatActivity {
         Intent intent=getIntent();
         DEFAULT_USER_ID=intent.getStringExtra(User_Info.USER_ID);
 
+        //初始加载Note页面;
         loadNoteLayout();
     }
 
@@ -79,9 +80,9 @@ public class NoteActivity extends AppCompatActivity {
 
         //重新对layout_note_title进行设置;
         LinearLayout title_layout=findViewById(R.id.linearLayout_note_title);
+
         ImageView icon=title_layout.findViewById(R.id.image_user_icon);
         icon.setImageResource(R.drawable.text_icon);
-
         //icon设置点击回到layout_note;
         icon.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -259,6 +260,14 @@ public class NoteActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"信息保存成功",Toast.LENGTH_LONG).show();
 
                 }
+            }
+        });
+
+        Button ScanQRCode=title_layout.findViewById(R.id.button_scanQRCode);
+        ScanQRCode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
     }

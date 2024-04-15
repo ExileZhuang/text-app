@@ -29,16 +29,30 @@
             android:contentDescription="@string/icon_decription"
             android:gravity="center"
             android:padding="5dp"
-            android:src="@drawable/user_icon" />
+            android:src="@drawable/user_icon"
+            android:layout_marginEnd="20dp"/>
 
         <Button
             android:id="@+id/button_save"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:gravity="center"
             android:text="@string/save"
             android:textColor="@color/black"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:layout_marginEnd="20dp"/>
+
+        <Button
+            android:id="@+id/button_scanQRCode"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/ScanQRCode"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:layout_marginEnd="20dp"/>
 
 
     </LinearLayout>

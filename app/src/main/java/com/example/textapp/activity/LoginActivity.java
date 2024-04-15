@@ -25,7 +25,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.textapp.MyApplication;
-import com.example.textapp.QRCode.QRCode;
 import com.example.textapp.R;
 import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
@@ -33,6 +32,7 @@ import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.User_Info;
 import com.example.textapp.entity.MessageType;
+import com.example.textapp.zxing.encoding.EncodingHandler;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +44,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
+
+    //向服务器申请的QRCodeId;
+    private String QRCodeId=null;
 
     private NotesDBHelper mDBHelper;
 
@@ -128,24 +131,36 @@ public class LoginActivity extends AppCompatActivity {
         layout.removeAllViews();
         layout.addView(qrcodeView,params);
 
-        //向服务器申请一个QRCodeId;
-        String qrcodeId=mClient.getQRCodeIdMessageFromServer();
+        //判断之前是否有QRCodeId,若有则直接根据QRCodeId展示，没有则向服务器申请;
+        setQRCodeImage(false);
+
+        //刷新二维码处理;
+        TextView tv_refreshQRCode=qrcodeView.findViewById(R.id.textview_qrcode_refresh);
+        tv_refreshQRCode.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                //一定刷新QRCodeId;
+                setQRCodeImage(true);
+            }
+        });
+    }
+
+    //若QRCodeId为空或者isRefresh为真则向服务器申请一个新的二维码并展示;
+    //其他情况则直接展示原先的二维码;
+    public void setQRCodeImage(boolean isRefresh){
+        if(QRCodeId==null||isRefresh) {
+            QRCodeId = mClient.getQRCodeIdMessageFromServer();
+        }
         try{
-            ImageView img_qrcode=qrcodeView.findViewById(R.id.imageView_qrcode_show);
-            Bitmap qrCode=QRCode.createQRCode(qrcodeId,500);
+            ImageView img_qrcode=findViewById(R.id.imageView_qrcode_show);
+            Bitmap qrCode= EncodingHandler.createQRCode(QRCodeId,500);
             img_qrcode.setImageBitmap(qrCode);
             //后续处理该qrcode的持续性和保存性问题;
             //preference?
         }catch (Exception e){
             e.printStackTrace();
         }
-
-        //申请完后向子线程发送消息等待有无授权消息;
-        //String UserId=mClient.waitQRCodeIdAuthorizationLoginMessage();
-
-        //Bitmap qrCodeBitmap = EncodingHandler.createQRCode(qrcodeId, 350);
-        //实现二维码生成;
-        //TODO;
     }
 
     //展示账号密码登录页面;
@@ -425,7 +440,39 @@ public class LoginActivity extends AppCompatActivity {
         mClient.insertNewValuesToServerTable(Login_Info.TABLE_LOGIN,values);
     }
 
+    //通过传入的UserId进行登录操作;
     public void QRCodeLoginByUserId(String UserId){
+        //由于是别的设备授权登录,因此账号一定存在;
 
+        //查看本地数据库中是否存在该UserId的消息:存在则直接忽略,不存在则从服务器获取该用户信息并插入;
+        User_Info info=mDBHelper.queryUserInfoByUserId(UserId);
+        if(info.user_id==null){
+            //本地并不存在该用户信息:从服务器获取并加入本地库中;
+            ArrayList<String> queryColumns=new ArrayList<>();
+            queryColumns.add(User_Info.PASSWORD);
+            queryColumns.add(User_Info.NAME);
+            queryColumns.add(User_Info.AGE);
+            queryColumns.add(User_Info.GENDER);
+            Map<String,String> selection=new HashMap<>();
+            selection.put(User_Info.USER_ID,UserId);
+            List<Map<String,String>> results=mClient.sendQueryColumnsBySelectionsToServerTable(User_Info.TABLE_USER,queryColumns,selection);
+            User_Info newInfo=new User_Info();
+            Map<String,String> result=results.get(0);
+            newInfo.user_id=UserId;
+            newInfo.password=result.get(User_Info.PASSWORD);
+            newInfo.age=Integer.parseInt(Objects.requireNonNull(result.get(User_Info.AGE)));
+            newInfo.gender=result.get(User_Info.GENDER);
+            newInfo.name=result.get(User_Info.NAME);
+            mDBHelper.insertUserInfoByUserInfo(newInfo);
+        }
+
+        //本次登录信息记录到数据库与远程数据库;
+        insertLoginInfoToLocalAndServer(UserId);
+
+
+        Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
+        intent.putExtra(User_Info.USER_ID,UserId);
+        startActivity(intent);
+        finish();
     }
 }
