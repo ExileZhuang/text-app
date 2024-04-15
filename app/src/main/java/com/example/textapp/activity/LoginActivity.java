@@ -1,5 +1,6 @@
 package com.example.textapp.activity;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -7,6 +8,9 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,12 +25,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.textapp.MyApplication;
+import com.example.textapp.QRCode.QRCode;
 import com.example.textapp.R;
 import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
 import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.User_Info;
+import com.example.textapp.entity.MessageType;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,6 +48,33 @@ public class LoginActivity extends AppCompatActivity {
     private NotesDBHelper mDBHelper;
 
     private TCPClient mClient;
+
+    //用于判断是否处于QRCode登录的模式下;
+    //在QRCode模式下接收到服务器发送的授权信息则进行登录处理;
+    //非QRCode模式下接收到服务器发送的授权信息则忽略处理;
+    private boolean InQRCodeLoginProcess=false;
+
+    //使用handler接收来自其他线程发送的消息并直接更新;
+    private final Handler ReceiveHandler=new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(@NonNull Message msg){
+            super.handleMessage(msg);
+            Log.v("Note","MainThread Get Message:"+msg.what);
+            switch (msg.what){
+                case MessageType.WHAT_QRCODEID_AUTHORIZE:
+                    if(InQRCodeLoginProcess){
+                        //接收到授权信息;
+                        //进行处理;
+                        Bundle bundle=msg.getData();
+                        String userId= bundle.getString(MessageType.BUNDLE_KEY_USERID);
+                        QRCodeLoginByUserId(userId);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,15 +131,17 @@ public class LoginActivity extends AppCompatActivity {
         //向服务器申请一个QRCodeId;
         String qrcodeId=mClient.getQRCodeIdMessageFromServer();
         try{
-//            Bitmap qrCodeBitmap=EncodingHandler.createQRCode(qrcodeId,300);
-//            ImageView img_qrcode=findViewById(R.id.imageView_qrcode_show);
-//            img_qrcode.setImageBitmap(qrCodeBitmap);
+            ImageView img_qrcode=qrcodeView.findViewById(R.id.imageView_qrcode_show);
+            Bitmap qrCode=QRCode.createQRCode(qrcodeId,500);
+            img_qrcode.setImageBitmap(qrCode);
+            //后续处理该qrcode的持续性和保存性问题;
+            //preference?
         }catch (Exception e){
             e.printStackTrace();
         }
 
         //申请完后向子线程发送消息等待有无授权消息;
-        String UserId=mClient.waitQRCodeIdAuthorizationLoginMessage();
+        //String UserId=mClient.waitQRCodeIdAuthorizationLoginMessage();
 
         //Bitmap qrCodeBitmap = EncodingHandler.createQRCode(qrcodeId, 350);
         //实现二维码生成;
@@ -390,4 +425,7 @@ public class LoginActivity extends AppCompatActivity {
         mClient.insertNewValuesToServerTable(Login_Info.TABLE_LOGIN,values);
     }
 
+    public void QRCodeLoginByUserId(String UserId){
+
+    }
 }

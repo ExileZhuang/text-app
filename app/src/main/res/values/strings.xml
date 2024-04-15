@@ -29,4 +29,5 @@
     <string name="female">女生</string>
     <string name="icon_decription">这是跳转到其他视图的图标</string>
     <string name="refresh">刷新二维码</string>
+    <string name="showQRCode">展示二维码</string>
 </resources>

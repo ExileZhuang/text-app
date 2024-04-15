@@ -36,8 +36,7 @@ public class TCPClientThread extends HandlerThread {
     //信息在发送后进行堵塞等待回传消息(之前也是)并放入queue中，发送后等待queue中出现对应消息并获取;
     private final Queue<NetMessage> OrderedNetMessageQueue=new LinkedList<>();
 
-    private Handler receiveHandler=null;
-    //接受主线程消息的handler;
+    private Handler mainThreadHandler=null;
 
     public TCPClientThread(String ThreadName){
         super(ThreadName);
@@ -56,11 +55,22 @@ public class TCPClientThread extends HandlerThread {
         }
     }
 
-
-    public void setReceiveHandler(Handler handler){
-        receiveHandler=handler;
+    //获得主线程的handler用于处理服务器通知性质的消息,从而直接更改主线程的UI等方面;
+    public void setMainThreadHandler(Handler handler){
+        mainThreadHandler=handler;
     }
 
+    //给主线程发送消息;
+    public void sendMessageToMainThread(final Message msg){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mainThreadHandler.sendMessage(msg);
+            }
+        }).start();
+    }
+
+    //向服务器发送字符串;
     public void sendStringToServer(String str){
         try{
             BufferedWriter output=new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
@@ -127,22 +137,30 @@ public class TCPClientThread extends HandlerThread {
                     while((msgStr= input.readLine())!=null){
                         Log.v("Note","Receive NetMessage:"+msgStr);
                         NetMessage rcvMessage=new NetMessage(msgStr);
-                        OrderedNetMessageQueue.offer(rcvMessage);
-                        //由于都是堵塞式等待服务器返回的消息,所以都可以直接放入OrderedNetMessageQueue;
-                        //如果后续遇到通知性服务器消息,用下面这种对不同类别的消息进行分类处理;
-//                        String msgType=rcvMessage.getAnsMessageType();
-//                        switch (msgType){
-//                            case NetMessage.ANSMESSAGE_TYPE_QUERY:
-//                            case NetMessage.ANSMESSAGE_TYPE_INSERT:
-//                            case NetMessage.ANSMESSAGE_TYPE_UPDATE:
-//                            case NetMessage.ANSMESSAGE_TYPE_DELETE:
-//                            case NetMessage.ANSMESSAGE_TYPE_GETQRCODEID:
-//                            case NetMessage.ANSMESSAGE_TYPE_ACKQRCODEID:
-//                                OrderedNetMessageQueue.offer(rcvMessage);
-//                                break;
-//                            case NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION:
-//                                break;
-//                        }
+                        //堵塞式等待服务器返回的消息,然后放入OrderedNetMessageQueue,等待被人获取;
+                        //遇到通知性服务器消息,对不同类别的消息进行分类处理,发送消息给主线程通知该类消息;
+                        String msgType=rcvMessage.getAnsMessageType();
+                        switch (msgType){
+                            case NetMessage.ANSMESSAGE_TYPE_QUERY:
+                            case NetMessage.ANSMESSAGE_TYPE_INSERT:
+                            case NetMessage.ANSMESSAGE_TYPE_UPDATE:
+                            case NetMessage.ANSMESSAGE_TYPE_DELETE:
+                            case NetMessage.ANSMESSAGE_TYPE_GETQRCODEID:
+                            case NetMessage.ANSMESSAGE_TYPE_ACKQRCODEID:
+                                OrderedNetMessageQueue.offer(rcvMessage);
+                                break;
+                            case NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION:
+                                //处理 NetMessage，将参数带入Message后发送Message到主线程;
+                                Message message=new Message();
+                                message.what=MessageType.WHAT_QRCODEID_AUTHORIZE;
+                                Bundle bundle=new Bundle();
+                                bundle.putString(MessageType.BUNDLE_KEY_USERID,rcvMessage.getString(NetMessage.USERID));
+                                message.setData(bundle);
+                                sendMessageToMainThread(message);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }catch (IOException e){
                     e.printStackTrace();
@@ -322,18 +340,5 @@ public class TCPClientThread extends HandlerThread {
             return false;
         }
         return rcvMessage.getString(NetMessage.STATUS).equals(NetMessage.STATUS_SUCCESS);
-    }
-
-    //通过二维码扫码登录后服务器发送的授权消息触发;
-    //传入user_id返回到主线程并实现登录;
-    public String waitQRCodeIdAuthorizationMessage(){
-        while(OrderedNetMessageQueue.isEmpty()){
-            //堵塞等待服务器发送Authorize消息;
-        }
-        NetMessage rcvMessage=OrderedNetMessageQueue.poll();
-        if(rcvMessage.getAnsMessageType().equals(NetMessage.ANSMESSAGE_TYPE_AUTHORIZATION)){
-            Log.v("Note","Too Busy For Request");
-        }
-        return rcvMessage.getString(NetMessage.USERID);
     }
 }

@@ -44,6 +44,8 @@ public class TCPClient {
 
         //实现sendHandler;
         //子线程对于收到信息的处理;
+        //很奇怪？为什么会在主线程而不是子线程设置?
+        //忘了;
         sendHandler=new Handler(thread.getLooper()) {
             @Override
             public void handleMessage(@NonNull Message msg) {
@@ -92,26 +94,33 @@ public class TCPClient {
                         message3.setData(bundle3);
                         MessageQueue.offer(message3);
                         break;
-                    case MessageType.WHAT_QRCODEID_AUTHORIZE:
-                        String userId=thread.waitQRCodeIdAuthorizationMessage();
-                        Message message4=new Message();
-                        message4.what=MessageType.WHAT_QRCODEID_AUTHORIZE;
-                        Bundle bundle4=new Bundle();
-                        bundle4.putString(MessageType.BUNDLE_KEY_USERID,userId);
-                        message4.setData(bundle4);
-                        MessageQueue.offer(message4);
-                        break;
+
+                        //授权方式已更改;
+//                    case MessageType.WHAT_QRCODEID_AUTHORIZE:
+//                        String userId=thread.waitQRCodeIdAuthorizationMessage();
+//                        Message message4=new Message();
+//                        message4.what=MessageType.WHAT_QRCODEID_AUTHORIZE;
+//                        Bundle bundle4=new Bundle();
+//                        bundle4.putString(MessageType.BUNDLE_KEY_USERID,userId);
+//                        message4.setData(bundle4);
+//                        MessageQueue.offer(message4);
+//                        break;
                     default:
                         break;
                 }
             }
         };
-        thread.setReceiveHandler(sendHandler);
 
     }
 
     public void closeClient(){
         thread.closeThread();
+    }
+
+
+    //给与服务器通信的子线程发送主线程接收其他线程消息的handler;
+    public void setSocketThreadGetMainThreadHandler(Handler handler){
+        thread.setMainThreadHandler(handler);
     }
 
 
@@ -267,23 +276,5 @@ public class TCPClient {
         Message rcvMessage=MessageQueue.poll();
         Bundle rcvBundle=rcvMessage.getData();
         return rcvBundle.getBoolean(MessageType.BUNDLE_KEY_STATUS);
-    }
-
-
-    //等待服务器发送的授权信息(包含了需要登录账户的UserId）并将其返回;
-    //给子线程发送消息使其等待直到服务器发送授权信息;
-    //将授权信息中的UserId返回并进行登录操作;
-    //问题处理:QRCodeId的保存性问题和持久性问题?(暂不考虑解决)(引入计时器？preference?）
-    public String waitQRCodeIdAuthorizationLoginMessage(){
-        Message msg=new Message();
-        msg.what=MessageType.WHAT_QRCODEID_AUTHORIZE;
-        sendHandler.sendMessage(msg);
-
-        while(MessageQueue.isEmpty()){
-            //堵塞等待子线程返回消息;
-        }
-        Message rcvMessage=MessageQueue.poll();
-        Bundle bundle=rcvMessage.getData();
-        return bundle.getString(MessageType.BUNDLE_KEY_USERID);
     }
 }
