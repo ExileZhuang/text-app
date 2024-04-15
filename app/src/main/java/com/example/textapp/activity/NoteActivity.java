@@ -27,6 +27,7 @@ import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.Note;
 import com.example.textapp.entity.User_Info;
+import com.example.textapp.zxing.activity.CaptureActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -42,6 +43,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class NoteActivity extends AppCompatActivity {
+
+    //zxing包中声明，避免改动该库源码,所以自己声明了一个;
+    public static final String SCANRESULT="result";
 
     private NotesDBHelper mDBHelper;
 
@@ -267,7 +271,8 @@ public class NoteActivity extends AppCompatActivity {
         ScanQRCode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Intent openCameraIntent = new Intent(NoteActivity.this, CaptureActivity.class);
+                startActivityForResult(openCameraIntent, 0);
             }
         });
     }
@@ -327,5 +332,15 @@ public class NoteActivity extends AppCompatActivity {
     protected void onDestroy(){
         mDBHelper.closeLink();
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK){
+            Bundle bundle=data.getExtras();
+            String qrcodeId=bundle.getString(SCANRESULT);
+            mClient.sendAckQRCodeIdToServer(qrcodeId,DEFAULT_USER_ID);
+        }
     }
 }
