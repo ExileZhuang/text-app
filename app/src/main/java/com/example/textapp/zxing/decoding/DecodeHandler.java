@@ -15,6 +15,7 @@
  */
 
 package com.example.textapp.zxing.decoding;
+import java.util.Hashtable;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,9 +33,6 @@ import com.google.zxing.MultiFormatReader;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
-import com.example.textapp.zxing.*;
-
-import java.util.Hashtable;
 
 final class DecodeHandler extends Handler {
 

@@ -16,9 +16,9 @@
 
 package com.example.textapp.zxing.camera;
 
-import android.graphics.Bitmap;
-
 import com.google.zxing.LuminanceSource;
+
+import android.graphics.Bitmap;
 
 /**
  * This object extends LuminanceSource around an array of YUV data returned from the camera driver,

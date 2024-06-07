@@ -16,6 +16,8 @@
 
 package com.example.textapp.zxing.decoding;
 
+import java.util.Vector;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -26,13 +28,11 @@ import android.os.Message;
 import android.util.Log;
 
 import com.example.textapp.R;
+import com.example.textapp.zxing.activity.CaptureActivity;
+import com.example.textapp.zxing.camera.CameraManager;
+import com.example.textapp.zxing.view.ViewfinderResultPointCallback;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
-import com.example.textapp.zxing.camera.*;
-import com.example.textapp.zxing.view.*;
-import com.example.textapp.zxing.activity.CaptureActivity;
-
-import java.util.Vector;
 
 /**
  * This class handles all the messaging which comprises the state machine for capture.
@@ -85,10 +85,9 @@ public final class CaptureActivityHandler extends Handler {
         
         /***********************************************************************/
         Bitmap barcode = bundle == null ? null :
-            (Bitmap) bundle.getParcelable(DecodeThread.BARCODE_BITMAP);//���ñ����߳�
+            (Bitmap) bundle.getParcelable(DecodeThread.BARCODE_BITMAP);//锟斤拷锟矫憋拷锟斤拷锟竭筹拷
         
-        activity.handleDecode((Result) message.obj, barcode);//���ؽ��
-        /***********************************************************************/
+        activity.handleDecode((Result) message.obj, barcode);//锟斤拷锟截斤拷锟�        /***********************************************************************/
         break;
       case R.id.decode_failed:
         // We're decoding as fast as possible, so when one decode fails, start another.

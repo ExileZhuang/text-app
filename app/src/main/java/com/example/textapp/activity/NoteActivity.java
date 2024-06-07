@@ -27,7 +27,7 @@ import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.Note;
 import com.example.textapp.entity.User_Info;
-import com.example.textapp.zxing.activity.CaptureActivity;
+import com.example.textapp.zxing.activity.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -279,7 +279,6 @@ public class NoteActivity extends AppCompatActivity {
 
     //加载Note相关内容;
     private void loadNoteLayout(){
-
         View ViewUserInfo= LayoutInflater.from(this).inflate(R.layout.layout_note_content, null);
         LinearLayout layout=findViewById(R.id.linearLayout_content);
         LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -320,6 +319,15 @@ public class NoteActivity extends AppCompatActivity {
                     mDBHelper.updateNoteContentByUserId(DEFAULT_USER_ID,noteContent);
                 }
                 Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        Button btn_scan=title_layout.findViewById(R.id.button_scanQRCode);
+        btn_scan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this,CaptureActivity.class);
+                startActivityForResult(intent,0);
             }
         });
     }

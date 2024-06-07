@@ -1,5 +1,8 @@
 package com.example.textapp.zxing.activity;
 
+import java.io.IOException;
+import java.util.Vector;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -25,10 +28,6 @@ import com.example.textapp.zxing.decoding.InactivityTimer;
 import com.example.textapp.zxing.view.ViewfinderView;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
-
-import java.io.IOException;
-import java.util.Vector;
-
 /**
  * Initial the camera
  * @author Ryan.Tang
@@ -54,8 +53,8 @@ public class CaptureActivity extends Activity implements Callback {
 		setContentView(R.layout.capture);
 		//ViewUtil.addTopView(getApplicationContext(), this, R.string.scan_card);
 		CameraManager.init(getApplication());
-		ViewfinderView viewfinderView =  findViewById(R.id.viewfinder_view);
-		Button cancelScanButton =  this.findViewById(R.id.btn_cancel_scan);
+		viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
+		cancelScanButton = (Button) this.findViewById(R.id.btn_cancel_scan);
 		hasSurface = false;
 		inactivityTimer = new InactivityTimer(this);
 	}
@@ -63,7 +62,7 @@ public class CaptureActivity extends Activity implements Callback {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		SurfaceView surfaceView = findViewById(R.id.preview_view);
+		SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
 		SurfaceHolder surfaceHolder = surfaceView.getHolder();
 		if (hasSurface) {
 			initCamera(surfaceHolder);
@@ -140,7 +139,7 @@ public class CaptureActivity extends Activity implements Callback {
 			return;
 		}
 		if (handler == null) {
-			handler = new CaptureActivityHandler(this, decodeFormats,
+			handler = new CaptureActivityHandler(CaptureActivity.this, decodeFormats,
 					characterSet);
 		}
 	}
@@ -189,8 +188,7 @@ public class CaptureActivity extends Activity implements Callback {
 			mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 			mediaPlayer.setOnCompletionListener(beepListener);
 
-			AssetFileDescriptor file = getResources().openRawResourceFd(
-					R.raw.beep);
+			AssetFileDescriptor file = getResources().openRawResourceFd(R.raw.beep);
 			try {
 				mediaPlayer.setDataSource(file.getFileDescriptor(),
 						file.getStartOffset(), file.getLength());
