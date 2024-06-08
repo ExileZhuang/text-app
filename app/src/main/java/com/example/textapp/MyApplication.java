@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 import com.example.textapp.TCPClient.TCPClient;
+import com.example.textapp.clientSocketThread.ClientSocketThread;
+import com.example.textapp.clientSocketThread.ClientSocketTools;
 import com.example.textapp.database.NotesDBHelper;
 
 public class MyApplication extends Application {
@@ -28,6 +30,8 @@ public class MyApplication extends Application {
         NotesDBHelper mDBHelper= NotesDBHelper.getInstance(this);
         mDBHelper.closeLink();
         mDBHelper.close();
+        ClientSocketThread clientSocketThread=ClientSocketThread.getClientSocket(ClientSocketTools.getLocalIpAddress(),ClientSocketTools.ServerPort);
+        clientSocketThread.release();
         super.onTerminate();
     }
 
