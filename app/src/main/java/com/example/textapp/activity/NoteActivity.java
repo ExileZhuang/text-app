@@ -1,6 +1,7 @@
 package com.example.textapp.activity;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.textapp.MyApplication;
@@ -71,6 +73,24 @@ public class NoteActivity extends AppCompatActivity {
 
         //初始加载Note页面;
         loadNoteLayout();
+
+        Button ScanQRCode=findViewById(R.id.button_scanQRCode);
+        ScanQRCode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent openCameraIntent = new Intent(NoteActivity.this, CaptureActivity.class);
+                startActivityForResult(openCameraIntent, 0);
+            }
+        });
+
+        Button btn_device=findViewById(R.id.button_hardware);
+        btn_device.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent openCameraIntent = new Intent(NoteActivity.this, HardwareControlActivity.class);
+                startActivityForResult(openCameraIntent, 0);
+            }
+        });
     }
 
     //加载用户信息相关内容;
@@ -266,15 +286,6 @@ public class NoteActivity extends AppCompatActivity {
                 }
             }
         });
-
-        Button ScanQRCode=title_layout.findViewById(R.id.button_scanQRCode);
-        ScanQRCode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent openCameraIntent = new Intent(NoteActivity.this, CaptureActivity.class);
-                startActivityForResult(openCameraIntent, 0);
-            }
-        });
     }
 
     //加载Note相关内容;
@@ -321,15 +332,6 @@ public class NoteActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_LONG).show();
             }
         });
-
-        Button btn_scan=title_layout.findViewById(R.id.button_scanQRCode);
-        btn_scan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this,CaptureActivity.class);
-                startActivityForResult(intent,0);
-            }
-        });
     }
 
 
@@ -347,8 +349,25 @@ public class NoteActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode==RESULT_OK){
             Bundle bundle=data.getExtras();
-            String qrcodeId=bundle.getString(SCANRESULT);
-            mClient.sendAckQRCodeIdToServer(qrcodeId,DEFAULT_USER_ID);
+            final String qrcodeId=bundle.getString(SCANRESULT);
+
+            AlertDialog.Builder dialog=new AlertDialog.Builder(NoteActivity.this);
+            dialog.setTitle("授权");
+            dialog.setMessage("是否授权给该设备登录？");
+            dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mClient.sendAckQRCodeIdToServer(qrcodeId,DEFAULT_USER_ID);
+                }
+            });
+            dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //do nothing;
+                }
+            });
+
+            dialog.show();
         }
     }
 }

@@ -3,7 +3,7 @@
 
     <string name="passwordLogin">账号密码登录</string>
     <string name="qrcodeLogin">二维码登录</string>
-    <string name="nfcLogin">nfc卡登录</string>
+    <string name="nfcLogin">NFC卡登录</string>
 
     <string name="save">保存</string>
 
@@ -27,9 +27,24 @@
     <string name="en_age">age</string>
     <string name="male">男生</string>
     <string name="female">女生</string>
-    <string name="icon_decription">这是跳转到其他视图的图标</string>
+    <string name="icon_description">这是跳转到其他视图的图标</string>
     <string name="refresh">刷新二维码</string>
     <string name="showQRCode">展示二维码</string>
     <string name="ScanQRCode">扫码登录其他设备</string>
-    <string name="Stepper_Motor">步进电机</string>
+    <string name="Hardware">设  备</string>
+    <string name="ScanBarcode">Scan Barcode</string>
+    <string name="Stepper_motor">步 进 电 机</string>
+    <string name="Start">启 动</string>
+    <string name="Stop">停 止</string>
+    <string name="Clockwise">顺 时 针</string>
+    <string name="Counterclockwise">逆 时 针</string>
+    <string name="Yellow_Led">亮 黄 灯</string>
+    <string name="Red_Led">亮 红 灯</string>
+    <string name="Green_Led">亮 绿 灯</string>
+    <string name="Lattice_Start">点 阵 开</string>
+    <string name="Lattice_Stop">点 阵 关</string>
+    <string name="Exit">退 出</string>
+    <string name="Go_in">进 门</string>
+    <string name="Open">打  开</string>
+    <string name="Read">读  取</string>
 </resources>

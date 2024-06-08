@@ -1,6 +1,5 @@
 package com.example.textapp.activity;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -28,6 +27,9 @@ import com.example.textapp.MyApplication;
 import com.example.textapp.R;
 import com.example.textapp.TCPClient.TCPClient;
 import com.example.textapp.Util.SharedUtil;
+import com.example.textapp.clientSocketThread.ClientSocketThread;
+import com.example.textapp.clientSocketThread.ClientSocketTools;
+import com.example.textapp.clientSocketThread.MessageListener;
 import com.example.textapp.database.NotesDBHelper;
 import com.example.textapp.entity.Login_Info;
 import com.example.textapp.entity.User_Info;
@@ -45,6 +47,9 @@ import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private byte[] buffer={(byte)0xFE,(byte)0xE0,0x08,0x32,0x72,0x00,0x02,0x0A};
+    private byte[] data={(byte)0xFE,(byte)0xE0,0x08,0x32,0x72,0x00,0x02,0x0A};
+
     //向服务器申请的QRCodeId;
     private String QRCodeId=null;
 
@@ -52,32 +57,10 @@ public class LoginActivity extends AppCompatActivity {
 
     private TCPClient mClient;
 
-    //用于判断是否处于QRCode登录的模式下;
-    //在QRCode模式下接收到服务器发送的授权信息则进行登录处理;
-    //非QRCode模式下接收到服务器发送的授权信息则忽略处理;
-    private boolean InQRCodeLoginProcess=false;
+    private ClientSocketThread clientSocketThread;
 
     //使用handler接收来自其他线程发送的消息并直接更新;
-    private final Handler ReceiveHandler=new Handler(Looper.getMainLooper()){
-        @Override
-        public void handleMessage(@NonNull Message msg){
-            super.handleMessage(msg);
-            Log.v("Note","MainThread Get Message:"+msg.what);
-            switch (msg.what){
-                case MessageType.WHAT_QRCODEID_AUTHORIZE:
-                    if(InQRCodeLoginProcess){
-                        //接收到授权信息;
-                        //进行处理;
-                        Bundle bundle=msg.getData();
-                        String userId= bundle.getString(MessageType.BUNDLE_KEY_USERID);
-                        QRCodeLoginByUserId(userId);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
+    private Handler recieveHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +75,46 @@ public class LoginActivity extends AppCompatActivity {
         mDBHelper=NotesDBHelper.getInstance(this);
         mDBHelper.openReadLink();
         mDBHelper.openWriteLink();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                clientSocketThread=ClientSocketThread.getClientSocket(ClientSocketTools.getLocalIpAddress(),ClientSocketTools.ServerPort);
+                clientSocketThread.setListener(new MessageListener() {
+                    @Override
+                    public void Message(byte[] message, int message_len) {
+                        System.arraycopy(message,1,data,0,4);
+                        String dataStr=ClientSocketTools.byte2hex(data,4);
+                        recieveHandler.sendMessage(recieveHandler.obtainMessage(MessageType.What_NFCDATA,dataStr));
+                    }
+                });
+            }
+        });
+
+        recieveHandler=new Handler(Looper.getMainLooper()){
+            public void handleMessage(Message msg){
+                super.handleMessage(msg);
+                switch(msg.what){
+                    case MessageType.WHAT_QRCODEID_AUTHORIZE:
+                        //获取授权信息;
+                        Bundle bundle=msg.getData();
+                        String userId=bundle.getString(MessageType.BUNDLE_KEY_USERID);
+                        //由于是授权，必定有指定账号密码，直接登录;
+                        insertLoginInfoToLocalAndServer(userId);
+                        Intent intent=new Intent(LoginActivity.this,NoteActivity.class);
+                        intent.putExtra(User_Info.USER_ID,userId);
+                        startActivity(intent);
+                        finish();
+                        break;
+                    case MessageType.What_NFCDATA:
+                        TextView txt_nfcData=findViewById(R.id.textview_nfcdata);
+                        txt_nfcData.setText(msg.obj.toString());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
 
         //初始化为账号密码登录;
         showLoginPasswordLayout();
@@ -144,6 +167,8 @@ public class LoginActivity extends AppCompatActivity {
                 setQRCodeImage(true);
             }
         });
+
+        mClient.setSocketThreadGetMainThreadHandler(recieveHandler);
     }
 
     //若QRCodeId为空或者isRefresh为真则向服务器申请一个新的二维码并展示;
@@ -414,6 +439,31 @@ public class LoginActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT);
         layout.removeAllViews();
         layout.addView(nfcView,params);
+
+        Button btn_nfc_read=nfcView.findViewById(R.id.Button_Read);
+        btn_nfc_read.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                buffer[3]=0x51;
+                try{
+                    clientSocketThread.getOutputStream().write(buffer);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                buffer[3]=0x55;
+                try{
+                    clientSocketThread.getOutputStream().write(buffer);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                buffer[3]=0x53;
+                try{
+                    clientSocketThread.getOutputStream().write(buffer);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     protected void onDestroy() {

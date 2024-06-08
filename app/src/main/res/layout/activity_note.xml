@@ -26,7 +26,7 @@
             android:id="@+id/image_user_icon"
             android:layout_width="50dp"
             android:layout_height="match_parent"
-            android:contentDescription="@string/icon_decription"
+            android:contentDescription="@string/icon_description"
             android:gravity="center"
             android:padding="5dp"
             android:src="@drawable/user_icon"
@@ -55,12 +55,12 @@
             android:layout_marginEnd="20dp"/>
 
         <Button
-            android:id="@+id/button_stepperMotor"
+            android:id="@+id/button_hardware"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="@string/Stepper_Motor"
+            android:text="@string/Hardware"
             android:textColor="@color/black"
             android:textSize="12sp"
             android:layout_marginEnd="20dp"

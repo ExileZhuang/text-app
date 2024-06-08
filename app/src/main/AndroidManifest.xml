@@ -26,6 +26,7 @@
         </activity>
 
         <activity android:name=".activity.NoteActivity"/>
+        <activity android:name=".activity.HardwareControlActivity"/>
         <activity
             android:configChanges="orientation|keyboardHidden"
             android:name="com.example.textapp.zxing.activity.CaptureActivity"

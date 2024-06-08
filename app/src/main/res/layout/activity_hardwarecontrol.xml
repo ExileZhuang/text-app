@@ -1,15 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
+    android:layout_height="match_parent"
+    android:orientation="vertical">
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:text="步  进  电  机"
+        android:textSize="40dp"
         android:gravity="center"
-        android:layout_gravity="center"
-        android:text="This is HardwareControlActivity"
-        android:textSize="30sp"
-        android:textColor="@color/black"/>
+        android:textColor="@color/blue" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <Button
+            android:id="@+id/Button_Clockwise"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Clockwise"
+            android:gravity="center"
+            android:textSize="24dp"
+            android:layout_marginRight="30dp" />
+
+        <Button
+            android:id="@+id/Button_CounterClockwise"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Counterclockwise"
+            android:gravity="center"
+            android:textSize="24dp"
+            android:layout_marginRight="30dp" />
+
+        <Button
+            android:id="@+id/Button_Stop"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Stop"
+            android:gravity="center"
+            android:textSize="24dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <Button
+            android:id="@+id/Button_Yellow_Led"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Yellow_Led"
+            android:gravity="center"
+            android:textSize="24dp"
+            android:layout_marginRight="30dp" />
+
+        <Button
+            android:id="@+id/Button_Green_LED"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Green_Led"
+            android:gravity="center"
+            android:textSize="24dp"
+            android:layout_marginRight="30dp" />
+
+        <Button
+            android:id="@+id/Button_Red_LED"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Red_Led"
+            android:gravity="center"
+            android:textSize="24dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <Button
+            android:id="@+id/Button_Lattice_Start"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Lattice_Start"
+            android:gravity="center"
+            android:textSize="24dp"
+            android:layout_marginRight="30dp" />
+
+        <Button
+            android:id="@+id/Button_Lattice_Stop"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/Lattice_Stop"
+            android:gravity="center"
+            android:textSize="24dp" />
+
+    </LinearLayout>
 
 </LinearLayout>
