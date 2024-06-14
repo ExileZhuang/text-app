@@ -14,13 +14,17 @@ import java.io.IOException;
 public class HardwareControlActivity extends Activity {
     private ClientSocketThread clientSocketThread;
 
-    private static final String CMD_OPEN_LEAD2="ioctl -d /dev/ledtest 1 1";
+    private static final String CMD_OPEN_LEAD1="ioctl -d /dev/ledtest 1 1";
 
-    private static final String CMD_OPEN_LEAD4="ioctl -d /dev/ledtest 1 3";
+    private static final String CMD_OPEN_LEAD2="ioctl -d /dev/ledtest 1 2";
 
-    private static final String CMD_READY_ZIGBEE="ioctl -d /dev/ledtest 0 4";
+    private static final String CMD_OPEN_LEAD3="ioctl -d /dev/ledtest 1 3";
 
-    private static final String CMD_OPEN_ZIGBEE="ioctl -d /dev/ledtest 1 4";
+    private static final String CMD_OPEN_LEAD0="ioctl -d /dev/ledtest 1 0";
+
+    private static final String CMD_OPEN_ZIGBEE ="ioctl -d /dev/ledtest 0 4";
+
+    private static final String CMD_CLOSE_ZIGBEE ="ioctl -d /dev/ledtest 1 4";
 
     private byte[] buffer={(byte)0xFE,(byte)0xE0,0x08,0x32,0x72,0x00,0x02,0x0A};
 
@@ -29,10 +33,11 @@ public class HardwareControlActivity extends Activity {
         setContentView(R.layout.activity_hardwarecontrol);
 
         try{
+            Runtime.getRuntime().exec(CMD_OPEN_LEAD0); //LED2
+            Runtime.getRuntime().exec(CMD_OPEN_LEAD1); //LED2
             Runtime.getRuntime().exec(CMD_OPEN_LEAD2); //LED2
-            Runtime.getRuntime().exec(CMD_OPEN_LEAD4); //LED4
-            Runtime.getRuntime().exec(CMD_READY_ZIGBEE); //蜂鸣器
-            Runtime.getRuntime().exec(CMD_OPEN_ZIGBEE);
+            Runtime.getRuntime().exec(CMD_OPEN_LEAD3); //LED4
+            Runtime.getRuntime().exec(CMD_OPEN_ZIGBEE); //蜂鸣器
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -102,7 +107,7 @@ public class HardwareControlActivity extends Activity {
             @Override
             public void onClick(View v) {
                 buffer[3]=0x32;
-                buffer[6]=0x03;
+                buffer[6]=0x01;
                 button_motor_stop.setEnabled(false);
                 button_motor_clockwise.setEnabled(true);
                 button_motor_counterclockwise.setEnabled(true);
@@ -140,6 +145,11 @@ public class HardwareControlActivity extends Activity {
 
     public void onDestroy(){
         clientSocketThread=null;
+        try{
+            Runtime.getRuntime().exec(CMD_CLOSE_ZIGBEE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         super.onDestroy();
     }
 }

@@ -24,7 +24,7 @@ import java.util.Queue;
 
 public class TCPClientThread extends HandlerThread {
 
-    public static final String SERVER_IP="192.168.56.1";
+    public static final String SERVER_IP="192.168.196.54";
 
     public static final int SERVER_PORT=8080;
 

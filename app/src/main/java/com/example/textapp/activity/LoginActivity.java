@@ -76,21 +76,6 @@ public class LoginActivity extends AppCompatActivity {
         mDBHelper.openReadLink();
         mDBHelper.openWriteLink();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                clientSocketThread=ClientSocketThread.getClientSocket(ClientSocketTools.getLocalIpAddress(),ClientSocketTools.ServerPort);
-                clientSocketThread.setListener(new MessageListener() {
-                    @Override
-                    public void Message(byte[] message, int message_len) {
-                        System.arraycopy(message,1,data,0,4);
-                        String dataStr=ClientSocketTools.byte2hex(data,4);
-                        recieveHandler.sendMessage(recieveHandler.obtainMessage(MessageType.What_NFCDATA,dataStr));
-                    }
-                });
-            }
-        });
-
         recieveHandler=new Handler(Looper.getMainLooper()){
             public void handleMessage(Message msg){
                 super.handleMessage(msg);
@@ -107,6 +92,7 @@ public class LoginActivity extends AppCompatActivity {
                         finish();
                         break;
                     case MessageType.What_NFCDATA:
+                        Toast.makeText(getApplicationContext(),"Data",Toast.LENGTH_LONG).show();
                         TextView txt_nfcData=findViewById(R.id.textview_nfcdata);
                         txt_nfcData.setText(msg.obj.toString());
                         break;
@@ -115,6 +101,21 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         };
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                clientSocketThread=ClientSocketThread.getClientSocket(ClientSocketTools.getLocalIpAddress(),ClientSocketTools.ServerPort);
+                clientSocketThread.setListener(new MessageListener() {
+                    @Override
+                    public void Message(byte[] message, int message_len) {
+                        System.arraycopy(message,1,data,0,4);
+                        String dataStr=ClientSocketTools.byte2hex(data,4);
+                        recieveHandler.sendMessage(recieveHandler.obtainMessage(MessageType.What_NFCDATA,dataStr));
+                    }
+                });
+            }
+        }).start();
 
         //初始化为账号密码登录;
         showLoginPasswordLayout();
@@ -440,24 +441,13 @@ public class LoginActivity extends AppCompatActivity {
         layout.removeAllViews();
         layout.addView(nfcView,params);
 
-        Button btn_nfc_read=nfcView.findViewById(R.id.Button_Read);
+        Button btn_nfc_read=findViewById(R.id.Button_Read);
         btn_nfc_read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                buffer[3]=0x51;
-                try{
-                    clientSocketThread.getOutputStream().write(buffer);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
                 buffer[3]=0x55;
                 try{
-                    clientSocketThread.getOutputStream().write(buffer);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-                buffer[3]=0x53;
-                try{
+                    Toast.makeText(getApplicationContext(),"账号已存在",Toast.LENGTH_LONG).show();
                     clientSocketThread.getOutputStream().write(buffer);
                 }catch (Exception e){
                     e.printStackTrace();
